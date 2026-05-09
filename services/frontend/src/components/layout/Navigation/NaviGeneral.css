@@ -1,0 +1,28 @@
+a {
+color: var(--body-text);
+}
+
+.general-nav {
+    display: flex;
+    border-bottom: 2px solid rgba(229,229,229,0.15);
+    justify-content: space-around;
+    padding: 20px;
+    align-items: center;
+    background: var(--color-prussian);
+    border-radius: 12px;
+}
+
+.general-logo-container  img{
+    width: 4rem;
+    height: 4rem;
+}
+.nav-icons {
+    width: 4rem;
+    height: 4rem;
+    color: var(--color-orange);
+}
+.general-title h2 {
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--color-orange);
+}

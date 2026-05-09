@@ -1,0 +1,95 @@
+.audit-logs-container {
+  padding: 20px;
+}
+
+.audit-timeline {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.log-item {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.log-item:hover {
+  border-color: var(--accent-color);
+  transform: translateX(4px);
+}
+
+.log-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.log-content {
+  flex: 1;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.log-action {
+  font-weight: 700;
+  color: var(--body-text);
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+}
+
+.log-date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.log-desc {
+  font-size: 0.9375rem;
+  color: var(--body-text);
+  margin: 0 0 12px 0;
+}
+
+.log-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.log-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.log-changes {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--surface-muted);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  overflow-x: auto;
+}
+
+.log-changes pre {
+  margin: 0;
+}

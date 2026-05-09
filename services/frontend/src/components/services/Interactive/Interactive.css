@@ -1,0 +1,47 @@
+.interactive-container {
+    position: relative; /* Required for absolute positioning of children */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    max-width: 100%;
+    height: 100vh;
+    background-image: url('../../assets/services/interactive/yealink_mb86.png');
+    background-size: cover; /* Ensure the background image covers the container */
+}
+
+.interactive-desc {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center; /* Center align the text */
+    color: #fff; /* Set text color */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.interactive-desc-title {
+    font-size: 64px;
+    font-weight: 700;
+    margin-bottom: 2rem;
+}
+.interactive-desc-sub-title {
+    font-size: 34px;
+    margin-bottom: 1rem;
+}
+.interactive-btn {
+    border-radius: 10px; /* Or any other border-radius value you desire */
+    padding: 10px;
+    margin-top: 2rem;
+    width: 14rem;
+    background-color: transparent; 
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    border: 2px solid white; /* Add border with white color */
+}
+.btn-img-white-arrow {
+    margin-left: 10px;
+}

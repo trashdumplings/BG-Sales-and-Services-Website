@@ -1,0 +1,38 @@
+.tele-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch; 
+    max-width: 100%;
+    max-height: 90vh;
+    background-image: url('../../assets/services/tele/banner_telecommunication_resize.webp');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.tele-section {
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5); 
+    margin-right: 10%;
+    margin-left: 65%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tele-desc {
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+.tele-title {
+    font-size: 45px;
+    font-weight: 900;
+    margin-bottom: 2rem;
+}
+.tele-title-desc {
+    font-size: 25px;
+    margin-bottom: 4rem;
+}
+
+
+
+
+

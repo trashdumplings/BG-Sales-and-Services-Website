@@ -1,0 +1,70 @@
+.portal-wrap {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--body-bg) 78%, var(--color-primary-blue)), var(--body-bg)),
+    var(--body-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.portal-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  max-width: 460px;
+  width: 100%;
+  color: var(--body-text);
+  box-shadow: var(--shadow-xl);
+}
+
+.portal-logo {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  margin-bottom: 18px;
+}
+
+.portal-kicker {
+  margin: 0 0 8px;
+  color: var(--color-primary-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.portal-card h1 {
+  margin: 0 0 10px;
+  color: var(--body-text);
+  font-size: 2rem;
+}
+
+.portal-copy {
+  margin: 0 auto;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  background: linear-gradient(135deg, var(--color-primary-blue), var(--color-accent));
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 750;
+  box-shadow: var(--shadow-md);
+}
+
+.portal-btn:hover {
+  color: white;
+  transform: translateY(-1px);
+}

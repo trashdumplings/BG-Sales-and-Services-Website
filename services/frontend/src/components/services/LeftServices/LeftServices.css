@@ -1,0 +1,103 @@
+.left-services-container {
+    padding: 72px 0 40px;
+    background: transparent;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.left-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+.right-side {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+}
+
+.left-side h2 {
+    color: var(--color-white);
+    font-size: 44px;
+    margin-bottom: 2rem;
+
+}
+.left-side p {
+    color: var(--body-text);
+    font-size: 16px;
+    margin-bottom: 1rem;
+}
+.left-side h4 {
+    font-size: 12px;
+    margin-bottom: 1rem;
+}
+.left-side .check-icon-desc {
+    display: flex;
+    align-items: center;
+
+}
+.left-side .check-icon-desc h4 {
+    margin-left: 10px;
+    color: var(--color-orange);
+}
+.left-side .check-icon-desc .check-icon {
+    color: var(--color-orange);
+}
+
+.right-side .right-side-card {
+    margin: 0;
+    background: var(--color-white);
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-white);
+
+}
+.right-side .right-circle {
+    width: 100px; /* Adjust the width of the circle */
+    height: 100px; /* Adjust the height of the circle */
+    border-radius: 50%; /* Create a circle by setting border-radius to 50% */
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.right-side .network-icon {
+    width: 4rem;
+    height: 4rem;
+    color: var(--body-text);
+}
+.right-side .card-desc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+}
+.bg-red {
+    background: var(--color-orange);
+}
+.bg-blue {
+    background: #0d1b2a;
+}
+.bg-green {
+    background: #1f4068;
+}
+.bg-purple {
+    background: #11253f;
+}

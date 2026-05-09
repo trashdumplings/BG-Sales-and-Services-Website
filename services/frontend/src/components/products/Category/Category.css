@@ -1,0 +1,32 @@
+.sidebar-title {
+    font-size: 22px;
+    font-weight: normal;
+    margin-bottom: 20px;
+    color: var(--color-white);
+}
+
+.sidebar-item {
+    margin-top: 20px;
+    color: rgba(245,245,245,0.85);
+}
+
+.sidebar-label-container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.sidebar-label-container input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    accent-color: var(--color-orange);
+}

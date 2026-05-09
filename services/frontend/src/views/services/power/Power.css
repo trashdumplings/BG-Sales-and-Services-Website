@@ -1,0 +1,106 @@
+.power-services-container {
+    padding: 72px 0 60px;
+    background: transparent;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+.power-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+.power-right-side {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    flex: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.power-side h2 {
+    color: var(--body-text);
+    font-size: 44px;
+    margin-bottom: 2rem;
+
+}
+.power-side p {
+    color: rgba(2,6,23,0.75);
+    font-size: 16px;
+    margin-bottom: 1rem;
+}
+
+[data-theme="dark"] .power-side p {
+    color: rgba(245,245,245,0.85);
+}
+.power-side h4 {
+    font-size: 12px;
+    margin-bottom: 1rem;
+}
+.power-side .check-icon-desc {
+    display: flex;
+    align-items: center;
+
+}
+.power-side .check-icon-desc h4 {
+    margin-left: 10px;
+    color: var(--color-orange);
+}
+.power-side .check-icon-desc .check-icon {
+    color: var(--color-orange);
+}
+
+.power-right-side .power-right-side-card {
+    margin: 1rem;
+    background: var(--color-white);
+    flex: 0 1 calc(50% - 2rem);
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--body-text);
+
+}
+.power-right-side .power-right-circle {
+    width: 100px; /* Adjust the width of the circle */
+    height: 100px; /* Adjust the height of the circle */
+    border-radius: 50%; /* Create a circle by setting border-radius to 50% */
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.power-right-side .power-icon {
+    width: 4rem;
+    height: 4rem;
+    color: var(--color-white);
+}
+.power-right-side .power-card-desc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+}
+.bg-red {
+    background: var(--color-orange);
+}
+.bg-blue {
+    background: #0d1b2a;
+}
+.bg-green {
+    background: #1f4068;
+}
+.bg-purple {
+    background: #050a18;
+}
