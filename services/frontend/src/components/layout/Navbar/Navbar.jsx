@@ -1,180 +1,110 @@
-
 import './Navbar.css'
 import logo from '../../../assets/logo.png'
-import { useState, useEffect } from 'react'
-import { Link } from 'react-scroll'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../../stores/AuthProvider'
-import { LuMoon, LuSun } from 'react-icons/lu'
+import { useEffect, useRef, useState } from 'react'
+import { FiArrowRight } from 'react-icons/fi'
+
+const navItems = [
+  { label: 'Home', id: 'hero' },
+  { label: 'Services', id: 'service' },
+  { label: 'Products', id: 'product' },
+  { label: 'About', id: 'about' },
+  { label: 'Projects', id: 'gallery' },
+  { label: 'Partners', id: 'partners' },
+  { label: 'Contact', id: 'contact' },
+]
 
 const Navbar = () => {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
   const [sticky, setSticky] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [theme, setTheme] = useState('light')
+  const [activeSection, setActiveSection] = useState('hero')
+  const menuRef = useRef(null)
+  const menuButtonRef = useRef(null)
 
-  // Initialize theme
   useEffect(() => {
-    const stored = window.localStorage.getItem('theme')
-    const initial = stored === 'light' || stored === 'dark' ? stored : 'light'
-    setTheme(initial)
-    document.documentElement.setAttribute('data-theme', initial)
-  }, [])
-
-  // Apply theme
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    window.localStorage.setItem('theme', theme)
-  }, [theme])
-
-  // Handle scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      setSticky(window.scrollY > 50)
-    }
+    const handleScroll = () => setSticky(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
-  }
+  useEffect(() => {
+    const sections = navItems
+      .map(({ id }) => document.getElementById(id))
+      .filter(Boolean)
 
-  const ThemeIcon = theme === 'dark' ? LuSun : LuMoon
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        if (visible) setActiveSection(visible.target.id)
+      },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.15, 0.4] },
+    )
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false)
-  }
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
 
-  const handleLogout = async () => {
-    await logout()
-    navigate('/')
-    closeMobileMenu()
-  }
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false)
+        menuButtonRef.current?.focus()
+      }
+    }
+    menuRef.current?.querySelector('a')?.focus()
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [mobileMenuOpen])
+
+  const closeMobileMenu = () => setMobileMenuOpen(false)
 
   return (
-    <nav className={`navbar ${sticky ? 'navbar--sticky' : ''}`}>
+    <nav className={`navbar ${sticky ? 'navbar--sticky' : ''}`} aria-label="Primary navigation">
       <div className="container-nav navbar-container">
-        {/* Logo */}
-        <div className="navbar-logo">
-          <img src={logo} alt="BG Sales & Supplies" className="navbar-logo-img" />
-          <div className="navbar-brand">
-            <h3>BG Sales & Supplies</h3>
-          </div>
-        </div>
+        <a className="navbar-logo" href="#hero" onClick={closeMobileMenu}>
+          <img src={logo} alt="" className="navbar-logo-img" />
+          <span className="navbar-brand">BG Sales &amp; Supplies</span>
+        </a>
 
-        {/* Navigation Links */}
-        <ul className={`navbar-menu ${mobileMenuOpen ? 'navbar-menu--open' : ''}`}>
-          <li>
-            <Link
-              to='hero'
-              smooth={true}
-              offset={0}
-              duration={500}
-              spy={true}
-              activeClass='navbar-link--active'
-              onClick={closeMobileMenu}
-              className='navbar-link'
-            >
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link
-              to='product'
-              smooth={true}
-              offset={-260}
-              duration={500}
-              spy={true}
-              activeClass='navbar-link--active'
-              onClick={closeMobileMenu}
-              className='navbar-link'
-            >
-              Products
-            </Link>
-          </li>
-          <li>
-            <Link
-              to='service'
-              smooth={true}
-              offset={-260}
-              duration={500}
-              spy={true}
-              activeClass='navbar-link--active'
-              onClick={closeMobileMenu}
-              className='navbar-link'
-            >
-              Services
-            </Link>
-          </li>
-          <li>
-            <Link
-              to='about'
-              smooth={true}
-              offset={-150}
-              duration={500}
-              spy={true}
-              activeClass='navbar-link--active'
-              onClick={closeMobileMenu}
-              className='navbar-link'
-            >
-              About
-            </Link>
-          </li>
-          <li>
-            <Link
-              to='gallery'
-              smooth={true}
-              offset={-240}
-              duration={500}
-              spy={true}
-              activeClass='navbar-link--active'
-              onClick={closeMobileMenu}
-              className='navbar-link'
-            >
-              Gallery
-            </Link>
-          </li>
-          <li>
-            <Link
-              to='contact'
-              smooth={true}
-              offset={-260}
-              duration={500}
-              spy={true}
-              activeClass='navbar-link--active'
-              onClick={closeMobileMenu}
-              className='navbar-link'
-            >
-              Contact
-            </Link>
-          </li>
+        <ul
+          className={`navbar-menu ${mobileMenuOpen ? 'navbar-menu--open' : ''}`}
+          id="primary-navigation"
+          ref={menuRef}
+        >
+          {navItems.map((item) => (
+            <li key={item.id}>
+              <a
+                href={`#${item.id}`}
+                onClick={closeMobileMenu}
+                className={`navbar-link ${activeSection === item.id ? 'navbar-link--active' : ''}`}
+                aria-current={activeSection === item.id ? 'location' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
         </ul>
 
-        {/* Right Actions */}
         <div className="navbar-actions">
+          <a href="#contact" className="navbar-quote-link" onClick={closeMobileMenu}>
+            Get a Quote <i><FiArrowRight /></i>
+          </a>
 
           <button
             type="button"
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          >
-            <ThemeIcon />
-          </button>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
+            ref={menuButtonRef}
             className={`hamburger ${mobileMenuOpen ? 'hamburger--active' : ''}`}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="primary-navigation"
           >
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
           </button>
         </div>
       </div>

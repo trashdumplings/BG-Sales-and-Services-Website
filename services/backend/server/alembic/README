@@ -1,0 +1,12 @@
+Use Alembic from the backend directory:
+
+    cd services/backend/server
+    alembic upgrade head
+
+Create a new migration:
+
+    alembic revision -m "describe_change"
+
+If metadata-based autogeneration is needed:
+
+    alembic revision --autogenerate -m "describe_change"

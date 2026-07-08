@@ -19,7 +19,7 @@
   transition: all 0.2s ease;
 }
 
-.log-item:hover {
+.log-item:focus-visible {
   border-color: var(--accent-color);
   transform: translateX(4px);
 }

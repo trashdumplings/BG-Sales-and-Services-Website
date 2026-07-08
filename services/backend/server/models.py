@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from enum import Enum
 from typing import Optional
-from sqlalchemy import String, Enum as SAEnum, DateTime, func, Integer, Text, Numeric, ForeignKey, Boolean, Date
+from sqlalchemy import String, Enum as SAEnum, DateTime, func, Integer, Text, Numeric, ForeignKey, Boolean, Date, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -81,6 +81,38 @@ class InventoryItem(Base):
     reorder_level: Mapped[int] = mapped_column(Integer, default=10)  # Alert when stock falls below this
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+# Public website catalog model
+class CatalogProduct(Base):
+    __tablename__ = "catalog_products"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    slug: Mapped[str] = mapped_column(String(180), unique=True, index=True)
+    sku: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    brand: Mapped[str] = mapped_column(String(120), index=True)
+    category: Mapped[str] = mapped_column(String(100), index=True)
+    image_url: Mapped[Optional[str]] = mapped_column(Text)
+    previous_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 2))
+    price: Mapped[float] = mapped_column(Numeric(12, 2))
+    stock: Mapped[int] = mapped_column(Integer, default=0)
+    featured: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    short_description: Mapped[str] = mapped_column(String(500))
+    description: Mapped[str] = mapped_column(Text)
+    specs: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class ProductInteraction(Base):
+    """Anonymous, aggregate-friendly storefront engagement event."""
+    __tablename__ = "product_interactions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("catalog_products.id", ondelete="CASCADE"), index=True)
+    event_type: Mapped[str] = mapped_column(String(30), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 # SuperAdmin model - Separate table for superadmin with additional privileges
 class SuperAdmin(Base):
@@ -217,7 +249,13 @@ class WorkLog(Base):
     task_name: Mapped[str] = mapped_column(String(255))
     hours: Mapped[float] = mapped_column(Numeric(4, 2))
     description: Mapped[Optional[str]] = mapped_column(Text)
+    challenges_faced: Mapped[Optional[str]] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="in_progress")  # in_progress, completed
+    workflow_status: Mapped[str] = mapped_column(String(20), default="draft", index=True)  # draft, submitted, approved, rejected
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    reviewed_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    reviewer_comment: Mapped[Optional[str]] = mapped_column(Text)
     is_approved: Mapped[bool] = mapped_column(Boolean, default=False)
     approved_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     manager_comment: Mapped[Optional[str]] = mapped_column(Text)

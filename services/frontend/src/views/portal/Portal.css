@@ -64,7 +64,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.portal-btn:hover {
+.portal-btn:focus-visible {
   color: white;
   transform: translateY(-1px);
 }

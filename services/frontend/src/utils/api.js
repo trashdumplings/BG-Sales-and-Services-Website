@@ -376,13 +376,215 @@ export async function createWorkLog(token, logData) {
   return res.json();
 }
 
-export async function approveWorkLog(token, logId, isApproved, comment) {
-  const res = await fetch(`${API_BASE}/api/work-logs/${logId}/approve`, {
+export async function getWorkLog(token, logId) {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}`, {
+    headers: getAuthHeaders(token),
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Failed to fetch work log');
+  return res.json();
+}
+
+export async function updateWorkLog(token, logId, logData) {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}`, {
     method: 'PATCH',
     headers: getAuthHeaders(token),
     credentials: 'include',
-    body: JSON.stringify({ is_approved: isApproved, manager_comment: comment })
+    body: JSON.stringify(logData)
   });
-  if (!res.ok) throw new Error('Failed to update work log status');
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.detail || 'Failed to update work log');
+  }
   return res.json();
+}
+
+export async function deleteWorkLog(token, logId) {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to delete work log');
+}
+
+export async function submitWorkLog(token, logId) {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}/submit`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.detail || 'Failed to submit work log');
+  }
+  return res.json();
+}
+
+export async function resubmitWorkLog(token, logId) {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}/resubmit`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.detail || 'Failed to resubmit work log');
+  }
+  return res.json();
+}
+
+export async function getWorkLogReviewQueue(token) {
+  const res = await fetch(`${API_BASE}/api/work-logs/review-queue`, {
+    headers: getAuthHeaders(token),
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Failed to fetch work log review queue');
+  return res.json();
+}
+
+export async function approveWorkLog(token, logId, comment = '') {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}/approve`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify({ reviewer_comment: comment })
+  });
+  if (!res.ok) throw new Error('Failed to approve work log');
+  return res.json();
+}
+
+export async function rejectWorkLog(token, logId, comment = '') {
+  const res = await fetch(`${API_BASE}/api/work-logs/${logId}/reject`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify({ reviewer_comment: comment })
+  });
+  if (!res.ok) throw new Error('Failed to reject work log');
+  return res.json();
+}
+
+// Reports APIs
+export async function getMonthlySummary(token, year, month) {
+  const queryParams = new URLSearchParams({ year, month });
+  try {
+    const res = await fetch(`${API_BASE}/api/reports/monthly-summary?${queryParams}`, {
+      headers: getAuthHeaders(token),
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, res.status === 401 ? 'Your session expired. Please sign in again.' : 'Failed to fetch monthly summary'));
+    }
+    return res.json();
+  } catch (error) {
+    if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+      throw new Error(`Unable to connect to reports service at ${API_BASE}. Please check if the backend server is running.`);
+    }
+    throw error;
+  }
+}
+
+export async function getInventoryAlerts(token) {
+  try {
+    const res = await fetch(`${API_BASE}/api/reports/inventory-alerts`, {
+      headers: getAuthHeaders(token),
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(error, res.status === 401 ? 'Your session expired. Please sign in again.' : 'Failed to fetch inventory alerts'));
+    }
+    return res.json();
+  } catch (error) {
+    if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+      throw new Error(`Unable to connect to reports service at ${API_BASE}. Please check if the backend server is running.`);
+    }
+    throw error;
+  }
+}
+
+// Public website product catalog and dashboard management APIs
+export async function getPublicProducts() {
+  const res = await fetch(`${API_BASE}/api/products/public`);
+  if (!res.ok) throw new Error('Failed to fetch website products');
+  return res.json();
+}
+
+export async function getPublicProduct(slug) {
+  const res = await fetch(`${API_BASE}/api/products/public/${encodeURIComponent(slug)}`);
+  if (!res.ok) throw new Error('Product not found');
+  return res.json();
+}
+
+export async function recordProductInteraction(slug, eventType) {
+  const res = await fetch(`${API_BASE}/api/products/public/${encodeURIComponent(slug)}/interaction`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event_type: eventType })
+  });
+  if (!res.ok) throw new Error('Failed to record product interaction');
+}
+
+export async function getCatalogProducts(token) {
+  const res = await fetch(`${API_BASE}/api/products`, {
+    headers: getAuthHeaders(token),
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Failed to fetch product catalog');
+  return res.json();
+}
+
+export async function uploadCatalogProductImage(token, imageFile) {
+  const body = new FormData();
+  body.append('image', imageFile);
+  const res = await fetch(`${API_BASE}/api/products/image`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    body
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to upload product image'));
+  }
+  return res.json();
+}
+
+export async function createCatalogProduct(token, productData) {
+  const res = await fetch(`${API_BASE}/api/products`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify(productData)
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to create product'));
+  }
+  return res.json();
+}
+
+export async function updateCatalogProduct(token, productId, productData) {
+  const res = await fetch(`${API_BASE}/api/products/${productId}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify(productData)
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to update product'));
+  }
+  return res.json();
+}
+
+export async function deleteCatalogProduct(token, productId) {
+  const res = await fetch(`${API_BASE}/api/products/${productId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(token),
+    credentials: 'include'
+  });
+  if (!res.ok) throw new Error('Failed to delete product');
 }

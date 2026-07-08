@@ -17,6 +17,8 @@ services/backend/venv/
 venv/
 .npm-cache/
 .vscode/
+.qodo/
+Microsoft/
 
 npm-debug.log*
 yarn-debug.log*

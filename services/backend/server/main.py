@@ -2,10 +2,12 @@ from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+from .api import routers
 from .db import engine, Base
 from .config import get_settings
-from .modules import auth, employees, inventory, leave, admin, work_logs, profile
+from .services.products import UPLOAD_DIR
 from .utils.auth import get_current_user
 from .models import User
 
@@ -45,24 +47,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="product-uploads")
+
 # Create tables at startup
 @app.on_event("startup")
 def on_startup():
     try:
-        # Create tables
-        Base.metadata.create_all(bind=engine)
-        print("Database connection successful and tables created/verified")
+        if settings.AUTO_CREATE_TABLES:
+            Base.metadata.create_all(bind=engine)
+            print("Database connection successful and tables created/verified")
+        else:
+            print("Database connection successful; AUTO_CREATE_TABLES disabled, expecting Alembic-managed schema")
     except Exception as e:
         print(f"Database connection error: {e}")
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(employees.router)
-app.include_router(inventory.router)
-app.include_router(leave.router)
-app.include_router(admin.router)
-app.include_router(work_logs.router)
-app.include_router(profile.router)
+for router in routers:
+    app.include_router(router)
 
 @app.get("/")
 def root():
@@ -79,6 +80,8 @@ def root():
             "auth": "/auth",
             "employees": "/api/employees",
             "inventory": "/api/inventory",
+            "products": "/api/products/public",
+            "reports": "/api/reports/monthly-summary",
             "leaves": "/api/leaves",
             "admin": "/admin",
             "health": "/health"

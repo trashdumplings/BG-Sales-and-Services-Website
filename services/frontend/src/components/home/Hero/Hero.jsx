@@ -1,80 +1,115 @@
 import './Hero.css'
-import { Link } from 'react-scroll'
-import { motion } from 'framer-motion'
-import heroImage from '../../../assets/hero/hero.png.png'
-import Magnetic from '../../common/Magnetic'
+import { lazy, Suspense, useRef } from 'react'
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'framer-motion'
+import { FiArrowDownRight, FiArrowUpRight } from 'react-icons/fi'
+import heroImage from '../../../assets/landing-bhutan/hero-thimphu-v2.jpg'
+
+const HeroGeometry = lazy(() => import('./HeroGeometry'))
 
 const Hero = () => {
-  const MotionLink = motion(Link)
+  const heroRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
 
-  const heroBackground = {
-     backgroundImage: `linear-gradient(135deg, rgba(26, 26, 46, 0.85), rgba(37, 99, 235, 0.4)), url(${heroImage})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat'
-  }
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] } }
-  }
+  const imageY = useTransform(scrollYProgress, [0, 1], ['0%', reduceMotion ? '0%' : '10%'])
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 72])
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.74], [1, 0])
+  const lineScale = useTransform(scrollYProgress, [0, 0.55], [0, 1])
 
   return (
-    <section className='hero' id='hero' style={heroBackground}>
-      <motion.div 
-        className='hero-content'
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: false, amount: 0.3 }}
-      >
-        <motion.h1 variants={itemVariants} className='hero-title'>
-          Transform Your Business with Expert MEP & ICT Solutions
-        </motion.h1>
-        
-        <motion.p variants={itemVariants} className='hero-subtitle'>
-          We deliver innovative consulting services that drive digital transformation and unlock your business potential. Partner with us to achieve sustainable growth.
-        </motion.p>
-        
-        <motion.div variants={itemVariants} className="hero-actions">
-          <Magnetic>
-            <MotionLink
-              to='about'
-              smooth={true}
-              offset={-80}
-              duration={500}
-              className='btn btn-primary btn-lg'
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              data-cursor="hover"
-            >
-              Explore Our Services
-            </MotionLink>
-          </Magnetic>
-          <Magnetic>
-            <MotionLink
-              to='contact'
-              smooth={true}
-              offset={-80}
-              duration={500}
-              className='btn btn-secondary btn-lg'
-              whileHover={{ scale: 1.03, y: -1 }}
-              whileTap={{ scale: 0.97 }}
-              data-cursor="hover"
-            >
-              Get in Touch
-            </MotionLink>
-          </Magnetic>
-        </motion.div>
+    <section className='cinematic-hero' id='hero' ref={heroRef}>
+      <motion.div className='cinematic-hero__image' style={{ y: imageY }}>
+        <img
+          src={heroImage}
+          alt='Thimphu city surrounded by the mountains of Bhutan at blue hour'
+          fetchPriority='high'
+        />
       </motion.div>
+
+      <div className='cinematic-hero__wash' aria-hidden='true' />
+      <div className='cinematic-hero__grain' aria-hidden='true' />
+      <Suspense fallback={null}>
+        <HeroGeometry scrollProgress={scrollYProgress} />
+      </Suspense>
+
+      <motion.div
+        className='cinematic-hero__content'
+        style={{ y: copyY, opacity: copyOpacity }}
+      >
+        <div className='cinematic-hero__meta'>
+          <span>BG Sales &amp; Supplies</span>
+          <span>Thimphu, Bhutan</span>
+        </div>
+
+        <h1 className='cinematic-hero__headline'>
+          <motion.div
+            className='cinematic-hero__headline-primary'
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 36 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <span>We build the systems</span>
+            <span>behind</span>
+          </motion.div>
+
+          <motion.div
+            className='cinematic-hero__headline-accent'
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 42 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.05, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          >
+            better business.
+          </motion.div>
+        </h1>
+
+        <div className='cinematic-hero__lower'>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.9, delay: 0.45 }}
+          >
+            Technology, infrastructure, and support designed as one dependable
+            system—built for organizations across Bhutan.
+          </motion.p>
+
+          <motion.div
+            className='cinematic-hero__actions'
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.55 }}
+          >
+            <a
+              href='#service'
+              className='cinematic-link cinematic-link--primary'
+            >
+              Explore services <FiArrowDownRight />
+            </a>
+            <a
+              href='mailto:bgsales@outlook.com?subject=Request%20for%20quotation'
+              className='cinematic-link cinematic-link--secondary'
+            >
+              Request a quotation <FiArrowUpRight />
+            </a>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <div className='cinematic-hero__footer'>
+        <span>ICT / MEP / Consulting</span>
+        <a href='#challenge'>
+          Scroll to discover
+          <motion.i style={{ scaleX: lineScale }} />
+        </a>
+        <span>Est. 2008</span>
+      </div>
     </section>
   )
 }

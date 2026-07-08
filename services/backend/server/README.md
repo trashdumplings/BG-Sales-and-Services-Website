@@ -70,7 +70,18 @@ Inventory Management (Admin):
 Development:
 - POST /dev/seed -> Development utility to create default users
 
+Database migrations
+- Alembic is now configured under `server/alembic`.
+- Run migrations from the backend folder:
+  - `cd services/backend/server`
+  - `alembic upgrade head`
+- Create a new migration:
+  - `alembic revision -m "describe_change"`
+- Auto-generate from model metadata when appropriate:
+  - `alembic revision --autogenerate -m "describe_change"`
+- For production-style environments, set `AUTO_CREATE_TABLES=false` and rely on Alembic migrations instead of runtime table creation.
+
 Notes
 - Refresh token is set on the /auth/* cookie path, httpOnly; set secure=True in production.
 - Access token is a JWT sent via Authorization header; keep TTL short (default 15 minutes).
-- DB is SQLAlchemy sync engine; you can migrate to async + Alembic later.
+- DB is SQLAlchemy sync engine with Alembic-based schema migrations.

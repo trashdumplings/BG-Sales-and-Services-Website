@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import About from '../../components/home/About/About'
+import Challenge from '../../components/home/Challenge/Challenge'
 import Contact from '../../components/home/Contact/Contact'
 import Footer from '../../components/layout/Footer/Footer'
 import Gallery from '../../components/home/Gallery/Gallery'
@@ -7,55 +7,55 @@ import Hero from '../../components/home/Hero/Hero'
 import Navbar from '../../components/layout/Navbar/Navbar'
 import Partner from '../../components/home/Partner/Partner'
 import Product from '../../components/home/Product/Product'
-import Service from '../../components/home/Service/Service'
-import Title from '../../components/common/Title/Title'
-import VideoPlayer from '../../components/common/VideoPlayer/VideoPlayer'
+import SolutionsStory from '../../components/home/SolutionsStory/SolutionsStory'
 import FacebookMsg from '../../components/home/FacebookMsg'
-import useScrollReveal from '../../composables/useScrollReveal'
+import './Landing.css'
 
 const Home = () => {
-    const [playState, setPalyState] = useState(false);
-    useScrollReveal();
   return (
-    <div>
-        <div className="container-nav">
-            <Navbar/>
-        </div>
-        <Hero/>
-        <div className="container">
-            <div className="reveal">
-              <Title subTitle = 'Our Product' title = 'Seamless Network Solution'/>
-              <Product/>
-            </div>
+    <div className='landing-page'>
+      <a className='skip-link' href='#main-content'>Skip to main content</a>
+      <Navbar />
+      <main id='main-content'>
+        <Hero />
+        <Challenge />
+        <SolutionsStory />
 
-            <div className="reveal">
-              <Title subTitle='Our Core Services' title='Practical, scalable solutions tailored to your business.'/>
-              <Service/>
+        <section className='landing-standard-section landing-products'>
+          <div className='landing-shell'>
+            <div className='landing-section-label'>
+              <span>Products</span>
+              <p>Business-ready hardware, selected for dependable deployment.</p>
             </div>
+            <Product />
+          </div>
+        </section>
 
-            <div className="reveal">
-              <About setPalyState={setPalyState}/>
+        <section className='landing-standard-section landing-about'>
+          <About />
+        </section>
+
+        <section className='landing-projects' id='gallery'>
+          <Gallery />
+        </section>
+
+        <section className='landing-partners' id='partners' aria-label='Technology partners'>
+          <div className='landing-shell'>
+            <div className='landing-section-label'>
+              <span>Technology partners</span>
+              <p>A broad supplier network for complete project delivery.</p>
             </div>
+          </div>
+          <Partner />
+        </section>
 
-            <div className="reveal">
-              <Title subTitle = 'Gallery' title = 'Explore Our Portfolio'/>
-              <Gallery/>
-            </div>
+        <section className='landing-contact'>
+          <Contact />
+        </section>
+      </main>
 
-            <div className="reveal">
-              <Title subTitle = 'Contact Us' title = 'Connect with Us Today'/>
-              <Contact/>
-            </div>
-
-            <div className="reveal">
-              <Title subTitle = 'Partners' title = 'Our Trusted Network of Partners'/>
-              <Partner/>
-            </div>
-
-            <Footer/>
-            <VideoPlayer playState= {playState} setPalyState={setPalyState}/>
-            <FacebookMsg/>
-        </div>
+      <Footer />
+      <FacebookMsg />
     </div>
   )
 }

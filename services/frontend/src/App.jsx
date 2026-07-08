@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import PrivateRoute from './utils/PrivateRoute'
 import ScrollProgress from './components/common/ScrollProgress'
 import BackToTop from './components/common/BackToTop'
-import Cursor from './components/common/Cursor'
 import SmoothScroll from './components/common/SmoothScroll'
 
 // Lazy load pages for code splitting
@@ -23,6 +22,7 @@ import {
   LuCalendarDays, 
   LuClipboardList, 
   LuPackage, 
+  LuShoppingBag,
   LuUsers, 
   LuShieldCheck, 
   LuSettings, 
@@ -46,7 +46,6 @@ const LoadingFallback = () => (
 const App = () => {
   return (
     <SmoothScroll>
-      <Cursor />
       <BrowserRouter>
         <ScrollProgress />
         <Suspense fallback={<LoadingFallback />}>
@@ -73,6 +72,7 @@ const App = () => {
             <Route path='assets/my' element={<ModulePage title="My Assigned Assets" icon={LuPackage} />} />
             <Route path='employees' element={<ModulePage title="Employee Directory" icon={LuUsers} />} />
             <Route path='inventory' element={<ModulePage title="Inventory Management" icon={LuPackage} />} />
+            <Route path='products' element={<ModulePage title="Product Management" icon={LuShoppingBag} />} />
             <Route path='reports' element={<ModulePage title="System Reports" icon={FiBarChart2} />} />
             <Route path='admin-panel' element={<ModulePage title="Admin Control Panel" icon={LuShieldCheck} />} />
             <Route path='audit' element={<ModulePage title="System Audit Logs" icon={LuHistory} />} />

@@ -63,32 +63,22 @@
   background: var(--surface-bg);
   border-radius: 0 0 0.5rem 0.5rem;
   border: 1px solid var(--border-color);
-  overflow-x: auto;
+  overflow: hidden;
 }
 
-.user-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
+.table-wrapper .dashboard-table {
+  margin-top: 0;
 }
 
-.user-table th {
-  padding: 1rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.85rem;
+.table-wrapper .dashboard-table__frame {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
-.user-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--body-text);
-  font-size: 0.9rem;
-}
-
-.user-table tr:hover td {
-  background: var(--surface-muted);
+.table-wrapper .dashboard-table__glow {
+  display: none;
 }
 
 .font-medium {
@@ -134,7 +124,7 @@
   border-radius: 0.25rem;
 }
 
-.action-btn:hover {
+.action-btn:focus-visible {
   background: rgba(14, 165, 233, 0.1);
 }
 

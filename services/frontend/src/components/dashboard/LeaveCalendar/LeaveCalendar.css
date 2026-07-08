@@ -50,7 +50,7 @@
   transition: all 0.2s;
 }
 
-.calendar-day:hover:not(.empty) { background: color-mix(in srgb, var(--color-primary-blue) 7%, var(--surface-muted)); transform: translateY(-2px); }
+.calendar-day:focus-visible:not(.empty) { background: color-mix(in srgb, var(--color-primary-blue) 7%, var(--surface-muted)); transform: translateY(-2px); }
 .calendar-day.empty { background: transparent; }
 
 .day-num { font-size: 0.9rem; font-weight: 600; color: var(--body-text); }

@@ -106,7 +106,7 @@
   box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
 }
 
-.signup-btn:hover:not(:disabled) {
+.signup-btn:focus-visible:not(:disabled) {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.4);
@@ -141,7 +141,7 @@
   transition: color 0.2s;
 }
 
-.signup-link:hover {
+.signup-link:focus-visible {
   color: #16a34a;
   text-decoration: underline;
 }

@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from .models import UserRole
 
 # Auth schemas
@@ -137,6 +137,65 @@ class InventoryItemOut(BaseModel):
 class InventoryAdjust(BaseModel):
     quantity_change: int  # Positive to add, negative to subtract
 
+# Website product catalog schemas
+class CatalogProductCreate(BaseModel):
+    slug: Optional[str] = None
+    sku: str = Field(min_length=1, max_length=100)
+    title: str = Field(min_length=2, max_length=255)
+    brand: str = Field(min_length=1, max_length=120)
+    category: str = Field(min_length=1, max_length=100)
+    image_url: Optional[str] = None
+    previous_price: Optional[float] = Field(default=None, ge=0)
+    price: float = Field(ge=0)
+    stock: int = Field(default=0, ge=0)
+    featured: bool = False
+    is_published: bool = False
+    short_description: str = Field(min_length=2, max_length=500)
+    description: str = Field(min_length=2)
+    specs: List[str] = Field(default_factory=list)
+
+class CatalogProductUpdate(BaseModel):
+    slug: Optional[str] = None
+    sku: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    title: Optional[str] = Field(default=None, min_length=2, max_length=255)
+    brand: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    category: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    image_url: Optional[str] = None
+    previous_price: Optional[float] = Field(default=None, ge=0)
+    price: Optional[float] = Field(default=None, ge=0)
+    stock: Optional[int] = Field(default=None, ge=0)
+    featured: Optional[bool] = None
+    is_published: Optional[bool] = None
+    short_description: Optional[str] = Field(default=None, min_length=2, max_length=500)
+    description: Optional[str] = Field(default=None, min_length=2)
+    specs: Optional[List[str]] = None
+
+class CatalogProductOut(BaseModel):
+    id: int
+    slug: str
+    sku: str
+    title: str
+    brand: str
+    category: str
+    image_url: Optional[str]
+    previous_price: Optional[float]
+    price: float
+    stock: int
+    featured: bool
+    is_published: bool
+    short_description: str
+    description: str
+    specs: List[str]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ProductInteractionCreate(BaseModel):
+    event_type: str = Field(pattern="^(view|quote_add|quote_submit)$")
+
 # Work Log schemas
 class WorkLogCreate(BaseModel):
     project_id: Optional[int] = None
@@ -144,15 +203,20 @@ class WorkLogCreate(BaseModel):
     task_name: str
     hours: float
     description: Optional[str] = None
-    status: str = "in_progress"
+    challenges_faced: Optional[str] = None
+    status: str = "completed"
 
 class WorkLogUpdate(BaseModel):
+    date: Optional[date] = None
+    project_id: Optional[int] = None
     task_name: Optional[str] = None
     hours: Optional[float] = None
     description: Optional[str] = None
+    challenges_faced: Optional[str] = None
     status: Optional[str] = None
-    is_approved: Optional[bool] = None
-    manager_comment: Optional[str] = None
+
+class WorkLogReviewAction(BaseModel):
+    reviewer_comment: Optional[str] = None
 
 class WorkLogOut(BaseModel):
     id: int
@@ -162,10 +226,18 @@ class WorkLogOut(BaseModel):
     task_name: str
     hours: float
     description: Optional[str]
+    challenges_faced: Optional[str]
     status: str
+    workflow_status: str
+    submitted_at: Optional[datetime]
+    reviewed_at: Optional[datetime]
+    reviewed_by_id: Optional[int]
+    reviewer_comment: Optional[str]
     is_approved: bool
     approved_by_id: Optional[int]
     manager_comment: Optional[str]
+    employee_name: Optional[str] = None
+    employee_code: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

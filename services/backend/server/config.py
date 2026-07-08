@@ -39,6 +39,7 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = Field(default="postgresql+psycopg2://postgres:postgres@localhost:5432/bgsale_portal")
+    AUTO_CREATE_TABLES: bool = Field(default=True)
 
     # Email / Notifications
     SMTP_HOST: str = Field(default="")

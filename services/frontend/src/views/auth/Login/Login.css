@@ -114,7 +114,7 @@
   cursor: pointer;
 }
 
-.forgot-link:hover,
+.forgot-link:focus-visible,
 .forgot-link:focus-visible {
   color: var(--color-accent);
   text-decoration: underline;
@@ -147,7 +147,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.login-btn:hover:not(:disabled) {
+.login-btn:focus-visible:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: var(--shadow-lg);
 }

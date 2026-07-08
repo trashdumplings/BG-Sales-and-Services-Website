@@ -52,31 +52,6 @@ export const itemVariants = {
 };
 
 /**
- * CARD HOVER ANIMATIONS
- * Provides elevation and visual feedback on interaction
- */
-export const cardHoverVariants = {
-  rest: {
-    y: 0,
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-  },
-  hover: {
-    y: -8,
-    boxShadow: '0 20px 40px rgba(37, 99, 235, 0.2)',
-    transition: { duration: 0.3, ease: 'easeOut' },
-  },
-};
-
-/**
- * SCALE ANIMATIONS
- * Used for icon hovers and emphasis
- */
-export const scaleOnHover = {
-  rest: { scale: 1 },
-  hover: { scale: 1.1, transition: { duration: 0.2 } },
-};
-
-/**
  * PARALLAX EFFECT CONFIGURATION
  * Creates depth perception as user scrolls
  */
@@ -140,7 +115,6 @@ export const scaleVariants = {
  */
 export const buttonVariants = {
   rest: { scale: 1 },
-  hover: { scale: 1.03, transition: { duration: 0.2 } },
   tap: { scale: 0.97 },
 };
 

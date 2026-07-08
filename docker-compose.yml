@@ -63,8 +63,11 @@ services:
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
       EMAIL_FROM: ${EMAIL_FROM:-}
       INVENTORY_ALERT_EMAIL: ${INVENTORY_ALERT_EMAIL:-}
+      PRODUCT_UPLOAD_DIR: /app/uploads
     ports:
       - "${CORE_PORT:-8000}:8000"
+    volumes:
+      - product_uploads:/app/uploads
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 15s
@@ -88,3 +91,4 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  product_uploads:

@@ -3,7 +3,17 @@ import { getLeaves, getLeaveBalance, createLeave, approveLeave, rejectLeave } fr
 import { useAuth } from '../../../stores/AuthProvider';
 import { LuCalendar, LuCircleCheck, LuCircleX, LuClock, LuInfo, LuPlus, LuList } from 'react-icons/lu';
 import LeaveCalendar from '../LeaveCalendar/LeaveCalendar';
+import DashboardTable from '../../common/DashboardTable/DashboardTable';
 import './LeaveManagement.css';
+
+const leaveColumns = (isManagement) => [
+  { key: 'type', label: 'Type', width: '14%' },
+  { key: 'dates', label: 'Dates', width: '22%' },
+  { key: 'days', label: 'Days', align: 'right', width: '10%' },
+  { key: 'status', label: 'Status', width: '16%' },
+  { key: 'reason', label: 'Reason', width: isManagement ? '24%' : '38%' },
+  ...(isManagement ? [{ key: 'actions', label: 'Actions', align: 'right', width: '14%' }] : []),
+];
 
 const LeaveManagement = () => {
   const { token, user } = useAuth();
@@ -125,39 +135,36 @@ const LeaveManagement = () => {
       ) : (
         <div className="leave-table-section">
           <h2 className="section-title">{isManagement ? 'All Leave Requests' : 'My Leave History'}</h2>
-        <div className="inventory-table-wrap">
-          <table className="inventory-table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Dates</th>
-                <th>Days</th>
-                <th>Status</th>
-                <th>Reason</th>
-                {isManagement && <th>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {leaves.map(leave => (
-                <tr key={leave.id}>
-                  <td className="type-cell">
-                    <span className={`type-tag ${leave.leave_type}`}>{leave.leave_type}</span>
-                  </td>
-                  <td>
+          <DashboardTable
+            columns={leaveColumns(isManagement)}
+            rows={leaves}
+            rowKey="id"
+            minWidth={isManagement ? 980 : 860}
+            emptyTitle="No leave requests found"
+            emptyDescription="Leave requests and approvals will appear here."
+            renderCell={(leave, column) => {
+              switch (column.key) {
+                case 'type':
+                  return <span className={`type-tag ${leave.leave_type}`}>{leave.leave_type}</span>;
+                case 'dates':
+                  return (
                     <div className="date-range">
                       {leave.start_date} to {leave.end_date}
                     </div>
-                  </td>
-                  <td>{leave.total_days}</td>
-                  <td>
+                  );
+                case 'days':
+                  return leave.total_days;
+                case 'status':
+                  return (
                     <span className={`status-badge ${leave.status}`}>
                       {leave.status === 'pending' && <LuClock className="status-icon" />}
                       {leave.status === 'approved' && <LuCircleCheck className="status-icon" />}
                       {leave.status === 'rejected' && <LuCircleX className="status-icon" />}
                       {leave.status}
                     </span>
-                  </td>
-                  <td>
+                  );
+                case 'reason':
+                  return (
                     <div className="reason-cell" title={leave.reason}>
                       {leave.reason || '-'}
                       {leave.rejection_reason && (
@@ -166,29 +173,21 @@ const LeaveManagement = () => {
                         </div>
                       )}
                     </div>
-                  </td>
-                  {isManagement && (
-                    <td>
-                      {leave.status === 'pending' ? (
-                        <div className="action-buttons">
-                          <button className="approve-btn" onClick={() => handleAction(leave.id, 'approve')}>Approve</button>
-                          <button className="reject-btn" onClick={() => handleAction(leave.id, 'reject')}>Reject</button>
-                        </div>
-                      ) : (
-                        <span className="action-completed">-</span>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              ))}
-              {leaves.length === 0 && (
-                <tr>
-                   <td colSpan={isManagement ? 6 : 5} className="no-data">No leave requests found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                  );
+                case 'actions':
+                  return leave.status === 'pending' ? (
+                    <div className="action-buttons">
+                      <button className="approve-btn" onClick={() => handleAction(leave.id, 'approve')}>Approve</button>
+                      <button className="reject-btn" onClick={() => handleAction(leave.id, 'reject')}>Reject</button>
+                    </div>
+                  ) : (
+                    <span className="action-completed">-</span>
+                  );
+                default:
+                  return null;
+              }
+            }}
+          />
       </div>
       )}
 

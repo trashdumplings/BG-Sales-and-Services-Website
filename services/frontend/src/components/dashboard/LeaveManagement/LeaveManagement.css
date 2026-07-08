@@ -2,6 +2,10 @@
   padding: 20px;
 }
 
+.leave-table-section .dashboard-table {
+  margin-top: 16px;
+}
+
 .leave-header-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -179,8 +183,8 @@
   border: 1px solid rgba(248, 113, 113, 0.2);
 }
 
-.approve-btn:hover { background: #34d399; color: #000; }
-.reject-btn:hover { background: #f87171; color: #fff; }
+.approve-btn:focus-visible { background: #34d399; color: #000; }
+.reject-btn:focus-visible { background: #f87171; color: #fff; }
 
 .no-data {
   text-align: center;

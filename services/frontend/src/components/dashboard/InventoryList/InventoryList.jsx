@@ -1,8 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { getInventoryItems } from '../../../utils/api';
+import {
+  adjustInventoryQuantity,
+  createInventoryItem,
+  getInventoryItems,
+  updateInventoryItem,
+} from '../../../utils/api';
 import { useAuth } from '../../../stores/AuthProvider';
-import { LuSearch, LuFilter, LuPlus, LuPackage, LuTriangleAlert, LuArrowUpDown } from 'react-icons/lu';
+import { LuSearch, LuFilter, LuPlus, LuPackage, LuTriangleAlert } from 'react-icons/lu';
+import DashboardTable from '../../common/DashboardTable/DashboardTable';
 import './InventoryList.css';
+
+const inventoryCategoryCodeMap = {
+  electronics: 'ELE',
+  networking: 'NET',
+  printers: 'PRI',
+  printer: 'PRI',
+  laptops: 'LAP',
+  laptop: 'LAP',
+  desktops: 'DES',
+  desktop: 'DES',
+  accessories: 'ACC',
+  power: 'PWR',
+  security: 'SEC',
+  audiovisual: 'AV',
+}
+
+const generateInventorySku = (category, items) => {
+  const normalizedCategory = category.trim().toLowerCase()
+  const code = inventoryCategoryCodeMap[normalizedCategory] || 'GEN'
+  const count = items.filter((item) => item.category?.trim().toLowerCase() === normalizedCategory).length + 1
+  return `INV-${code}-${String(count).padStart(3, '0')}`
+}
+
+const inventoryColumns = [
+  { key: 'item', label: 'Item', width: '30%' },
+  { key: 'sku', label: 'SKU', width: '13%' },
+  { key: 'category', label: 'Category', width: '14%' },
+  { key: 'quantity', label: 'Quantity', align: 'right', width: '11%' },
+  { key: 'status', label: 'Status', width: '12%' },
+  { key: 'price', label: 'Price', align: 'right', width: '10%' },
+  { key: 'actions', label: 'Actions', align: 'right', width: '10%' },
+];
 
 const InventoryList = () => {
   const { token } = useAuth();
@@ -45,6 +83,16 @@ const InventoryList = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (!showModal) return
+
+    setFormData((prev) => {
+      const nextSku = generateInventorySku(prev.category, items)
+      if (prev.sku === nextSku) return prev
+      return { ...prev, sku: nextSku }
+    })
+  }, [items, showModal, formData.category])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -54,24 +102,12 @@ const InventoryList = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/inventory`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          quantity: parseInt(formData.quantity),
-          unit_price: parseFloat(formData.unit_price),
-          reorder_level: parseInt(formData.reorder_level)
-        })
+      await createInventoryItem(token, {
+        ...formData,
+        quantity: parseInt(formData.quantity),
+        unit_price: parseFloat(formData.unit_price),
+        reorder_level: parseInt(formData.reorder_level)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to add item');
-      }
 
       await fetchItems();
       setShowModal(false);
@@ -95,15 +131,7 @@ const InventoryList = () => {
 
   const handleAdjustQuantity = async (itemId, change) => {
      try {
-       const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/inventory/${itemId}/adjust`, {
-         method: 'PATCH',
-         headers: {
-           'Content-Type': 'application/json',
-           'Authorization': `Bearer ${token}`
-         },
-         body: JSON.stringify({ quantity_change: change })
-       });
-       if (!response.ok) throw new Error('Adjustment failed');
+       await adjustInventoryQuantity(token, itemId, change);
        await fetchItems();
      } catch (err) {
        alert(err.message);
@@ -135,89 +163,101 @@ const InventoryList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="filter-group">
-          <div className="filter-select">
-            <LuFilter className="filter-icon" />
-            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <div className="filter-group">
+            <div className="filter-select">
+              <LuFilter className="filter-icon" />
+              <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
               <option value="">All Categories</option>
               {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
-          <button className="add-btn" onClick={() => setShowModal(true)}>
+          <button
+            className="add-btn"
+            onClick={() => {
+              setFormData({
+                sku: generateInventorySku('', items),
+                name: '',
+                description: '',
+                category: '',
+                quantity: 0,
+                unit_price: 0,
+                supplier: '',
+                location: '',
+                reorder_level: 10
+              });
+              setShowModal(true);
+            }}
+          >
             <LuPlus />
             <span>New Item</span>
           </button>
         </div>
       </div>
 
-      <div className="inventory-table-wrap">
-        <table className="inventory-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>SKU</th>
-              <th>Category</th>
-              <th>Quantity</th>
-              <th>Status</th>
-              <th>Price</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map(item => (
-              <tr key={item.id}>
-                <td>
-                  <div className="item-cell">
-                    <LuPackage className="item-icon" />
-                    <div className="item-info">
-                      <div className="item-name">{item.name} <span className={`cms-badge ${item.cms_status}`}>{item.cms_status}</span></div>
-                      <div className="item-location">{item.location || 'No location'} (v{item.version})</div>
-                    </div>
+      <DashboardTable
+        columns={inventoryColumns}
+        rows={filteredItems}
+        rowKey="id"
+        minWidth={980}
+        emptyTitle="No inventory items found"
+        emptyDescription="Add a new item or adjust your search and filters."
+        renderCell={(item, column) => {
+          switch (column.key) {
+            case 'item':
+              return (
+                <div className="item-cell">
+                  <LuPackage className="item-icon" />
+                  <div className="item-info">
+                    <div className="item-name">{item.name} <span className={`cms-badge ${item.cms_status}`}>{item.cms_status}</span></div>
+                    <div className="item-location">{item.location || 'No location'} (v{item.version})</div>
                   </div>
-                </td>
-                <td className="sku-cell">{item.sku}</td>
-                <td>{item.category}</td>
-                <td>
-                  <div className="qty-cell">
-                    <span className="qty-val">{item.quantity}</span>
-                    {item.quantity < item.reorder_level && (
-                      <LuTriangleAlert className="low-stock-alert" title="Low stock alert" />
-                    )}
-                  </div>
-                </td>
-                <td>
-                  <span className={`status-badge ${item.status}`}>
-                    {item.status.replace('_', ' ')}
-                  </span>
-                </td>
-                <td>${item.unit_price}</td>
-                <td>
-                  <div className="action-buttons">
-                    <button 
-                      className={`cms-btn ${item.cms_status === 'published' ? 'unpublish' : 'publish'}`}
-                      onClick={async () => {
-                        const newStatus = item.cms_status === 'published' ? 'draft' : 'published';
-                        try {
-                          const res = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/inventory/${item.id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ cms_status: newStatus })
-                          });
-                          if (res.ok) fetchItems();
-                        } catch (err) { alert(err.message); }
-                      }}
-                    >
-                      {item.cms_status === 'published' ? 'Draft' : 'Publish'}
-                    </button>
-                    <button className="qty-btn plus" onClick={() => handleAdjustQuantity(item.id, 1)}>+</button>
-                    <button className="qty-btn minus" onClick={() => handleAdjustQuantity(item.id, -1)}>-</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              );
+            case 'sku':
+              return <span className="sku-cell">{item.sku}</span>;
+            case 'category':
+              return item.category;
+            case 'quantity':
+              return (
+                <div className="qty-cell">
+                  <span className="qty-val">{item.quantity}</span>
+                  {item.quantity < item.reorder_level && (
+                    <LuTriangleAlert className="low-stock-alert" title="Low stock alert" />
+                  )}
+                </div>
+              );
+            case 'status':
+              return (
+                <span className={`status-badge ${item.status}`}>
+                  {item.status.replace('_', ' ')}
+                </span>
+              );
+            case 'price':
+              return `$${item.unit_price}`;
+            case 'actions':
+              return (
+                <div className="action-buttons">
+                  <button 
+                    className={`cms-btn ${item.cms_status === 'published' ? 'unpublish' : 'publish'}`}
+                    onClick={async () => {
+                      const newStatus = item.cms_status === 'published' ? 'draft' : 'published';
+                      try {
+                        await updateInventoryItem(token, item.id, { cms_status: newStatus });
+                        fetchItems();
+                      } catch (err) { alert(err.message); }
+                    }}
+                  >
+                    {item.cms_status === 'published' ? 'Draft' : 'Publish'}
+                  </button>
+                  <button className="qty-btn plus" onClick={() => handleAdjustQuantity(item.id, 1)}>+</button>
+                  <button className="qty-btn minus" onClick={() => handleAdjustQuantity(item.id, -1)}>-</button>
+                </div>
+              );
+            default:
+              return null;
+          }
+        }}
+      />
 
       {showModal && (
         <div className="modal-overlay">
@@ -230,7 +270,13 @@ const InventoryList = () => {
               <div className="form-row">
                 <div className="form-group">
                   <label>SKU</label>
-                  <input name="sku" value={formData.sku} onChange={handleInputChange} required placeholder="INV-001" />
+                  <input
+                    name="sku"
+                    value={formData.sku}
+                    readOnly
+                    required
+                    placeholder="Auto-generated"
+                  />
                 </div>
                 <div className="form-group">
                   <label>Category</label>

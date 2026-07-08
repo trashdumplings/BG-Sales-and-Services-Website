@@ -8,4 +8,5 @@ python-jose[cryptography]==3.3.0
 pydantic[email]
 pydantic-settings
 python-multipart
-reportlab
+reportlab==4.5.1
+alembic==1.18.0

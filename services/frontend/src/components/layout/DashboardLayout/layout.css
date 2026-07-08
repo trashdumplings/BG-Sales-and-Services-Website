@@ -122,8 +122,8 @@
   font-weight: 550;
 }
 
-.nav-link:hover,
-.logout-btn:hover {
+.nav-link:focus-visible,
+.logout-btn:focus-visible {
   color: var(--body-text);
   background: var(--surface-muted);
 }
@@ -148,7 +148,7 @@
   width: 100%;
 }
 
-.logout-btn:hover {
+.logout-btn:focus-visible {
   background: rgba(194, 65, 63, 0.1);
   color: var(--color-danger);
 }
@@ -204,7 +204,7 @@
   transition: transform var(--transition-fast), border-color var(--transition-fast);
 }
 
-.dash-theme-toggle:hover {
+.dash-theme-toggle:focus-visible {
   transform: translateY(-1px);
   border-color: var(--color-accent);
 }
@@ -316,7 +316,7 @@
   color: inherit;
 }
 
-.action-card:hover {
+.action-card:focus-visible {
   transform: translateY(-2px);
   border-color: var(--color-accent);
   box-shadow: var(--shadow-md);

@@ -15,6 +15,8 @@ const SmoothScroll = ({ children }) => {
       infinite: false,
     });
 
+    window.__bgLenis = lenis;
+
     function raf(time) {
       lenis.raf(time);
       requestAnimationFrame(raf);
@@ -23,6 +25,9 @@ const SmoothScroll = ({ children }) => {
     requestAnimationFrame(raf);
 
     return () => {
+      if (window.__bgLenis === lenis) {
+        delete window.__bgLenis;
+      }
       lenis.destroy();
     };
   }, []);

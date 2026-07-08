@@ -1,75 +1,152 @@
 import './About.css'
-import { motion } from 'framer-motion'
-import about_img from '../../../assets/about/about.png'
-import play_icon from '../../../assets/play-icon.png'
+import { useRef } from 'react'
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
+import { FiArrowUpRight } from 'react-icons/fi'
+import aboutImage from '../../../assets/landing-bhutan/about-operations-bhutan.jpg'
 
-const About = ({setPalyState}) => {
-  const textVariants = {
-    hidden: { opacity: 0, x: -30 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] } }
-  }
+const stats = [
+  { value: '2008', label: 'Established in Bhutan' },
+  { value: '18+', label: 'Years of practical delivery' },
+  { value: '29', label: 'Technology partners' },
+]
 
-  const imageVariants = {
-    hidden: { opacity: 0, x: 30 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] } }
-  }
+const About = () => {
+  const sectionRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 85,
+    damping: 24,
+    mass: 0.4,
+  })
+  const imageY = useTransform(
+    smoothProgress,
+    [0, 1],
+    [reduceMotion ? '0%' : '-4%', reduceMotion ? '0%' : '4%'],
+  )
+  const statementY = useTransform(
+    smoothProgress,
+    [0, 1],
+    [reduceMotion ? 0 : 50, reduceMotion ? 0 : -24],
+  )
 
   return (
-    <section className='section section--spacious' id='about'>
-      <div className='about-container'>
-        <motion.div 
-          className="about-left"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.3 }}
-          variants={imageVariants}
+    <section className="home-about" id="about" ref={sectionRef}>
+      <div className="home-about__header">
+        <span>About BG</span>
+        <p>Thimphu, Bhutan · Since 2008</p>
+      </div>
+
+      <motion.div
+        className="home-about__statement"
+        style={{ y: statementY }}
+        initial={reduceMotion ? false : { opacity: 0, y: 44 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.35 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <span>Built here.</span>
+        <h2>Close to the work.<br />Committed for the long term.</h2>
+      </motion.div>
+
+      <div className="home-about__story">
+        <motion.div
+          className="home-about__media"
+          initial={reduceMotion ? false : { opacity: 0, clipPath: 'inset(12% 0 0 0)' }}
+          whileInView={{ opacity: 1, clipPath: 'inset(0% 0 0 0)' }}
+          viewport={{ once: true, amount: 0.16 }}
+          transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className='about-image-wrapper'>
-            <img src={about_img} className='about-img' alt="About BG Sales & Supplies" />
-            <div className='play-button' onClick={()=>{setPalyState(true)}}>
-              <img src={play_icon} alt="Play video" className='play-icon' />
-            </div>
-          </div>
+          <motion.img
+            src={aboutImage}
+            alt="Technology operations overlooking Thimphu's mountain valley"
+            loading="lazy"
+            style={{ y: imageY }}
+          />
+          <div className="home-about__media-shade" />
+          <span className="home-about__location">27.4728° N · 89.6393° E</span>
         </motion.div>
 
-        <motion.div 
-          className="about-right"
-          initial="hidden"
+        <motion.div
+          className="home-about__copy"
+          initial={reduceMotion ? false : 'hidden'}
           whileInView="visible"
-          viewport={{ once: false, amount: 0.3 }}
-          variants={textVariants}
+          viewport={{ once: true, amount: 0.28 }}
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.1 } },
+          }}
         >
-          <div className='about-label'>Our Story</div>
-          <h2 className='h2'>Unlock Possibilities, Access Solutions</h2>
-          
-          <div className='about-content'>
-            <p>
-              BG Sales & Supplies stands as your premier partner for all IT needs since 2008. 
-              With a legacy built on steadfast commitment to excellence, we've become the cornerstone 
-              of reliability in information technology.
-            </p>
-            
-            <p>
-              We specialize in delivering bespoke solutions that propel your business into the digital age. 
-              Over a decade of industry experience has equipped our seasoned team with the knowledge and 
-              skills to exceed your expectations consistently.
-            </p>
-            
-            <p>
-              Our comprehensive range of services is tailored to meet your specific needs—from cutting-edge 
-              hardware solutions to enterprise-level consulting. We provide a holistic approach to address 
-              all your IT requirements.
-            </p>
-            
-            <p>
-              At BG Sales & Supplies, we deliver more than products and services—we deliver peace of mind. 
-              Trust us to be your partner on your journey towards digital transformation.
-            </p>
-          </div>
+          <motion.p
+            className="home-about__lead"
+            variants={{
+              hidden: { opacity: 0, y: 25 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+            }}
+          >
+            We help organizations turn complex technology requirements into systems
+            that people can rely on every day.
+          </motion.p>
 
-          <a href='/about' className='btn btn-primary'>
-            Learn More
-          </a>
+          <motion.div
+            className="home-about__body"
+            variants={{
+              hidden: { opacity: 0, y: 22 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+            }}
+          >
+            <p>
+              Our work spans products, ICT infrastructure, MEP systems, consulting,
+              installation, and long-term maintenance—giving every client one
+              accountable partner from planning through operation.
+            </p>
+            <p>
+              International technology partnerships give us range. Local knowledge,
+              practical engineering, and accessible support make that technology work
+              here in Bhutan.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="home-about__stats"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.09 } },
+            }}
+          >
+            {stats.map((stat) => (
+              <motion.div
+                key={stat.label}
+                variants={{
+                  hidden: { opacity: 0, x: reduceMotion ? 0 : -16 },
+                  visible: { opacity: 1, x: 0 },
+                }}
+              >
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.a
+            href="mailto:bgsales@outlook.com"
+            className="home-about__link"
+            variants={{
+              hidden: { opacity: 0, y: 15 },
+              visible: { opacity: 1, y: 0 },
+            }}
+          >
+            Start a conversation <FiArrowUpRight />
+          </motion.a>
         </motion.div>
       </div>
     </section>

@@ -1,4 +1,6 @@
 node_modules
+.npm-cache
+.agents
 services/frontend/node_modules
 dist
 .git
@@ -10,6 +12,7 @@ dist
 venv
 services/backend/venv
 services/backend/server/__pycache__
+services/backend/server/uploads
 services/backend/server/.env
 .env
 npm-debug.log*

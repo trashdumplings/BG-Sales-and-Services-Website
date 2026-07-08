@@ -1,5 +1,5 @@
-/* Optimized font loading with system fallback stack */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap&subset=latin');
+/* Editorial display + highly legible interface typography */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 /* ===== DESIGN SYSTEM ===== */
 
@@ -35,7 +35,8 @@
     --text-muted: var(--text-secondary);
     
     /* Typography */
-    --font-family-primary: 'Poppins', sans-serif;
+    --font-family-primary: 'DM Sans', sans-serif;
+    --font-family-display: 'Manrope', sans-serif;
     
     /* Heading Scale */
     --h1-size: clamp(2.5rem, 5vw, 3.75rem);
@@ -111,6 +112,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 86px;
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
 }
@@ -173,7 +175,7 @@ body {
     }
 }
 
-.back-to-top:hover {
+.back-to-top:focus-visible {
     transform: translateY(-3px);
     background: rgba(255,255,255,1);
     color: var(--color-accent);
@@ -264,7 +266,7 @@ a {
     color: var(--color-primary-blue);
     transition: color var(--transition-fast);
     
-    &:hover {
+    &:focus-visible {
         color: var(--color-accent);
     }
 }
@@ -357,7 +359,7 @@ li {
     color: var(--color-white);
     box-shadow: var(--shadow-md);
     
-    &:hover:not(:disabled) {
+    &:focus-visible:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
     }
@@ -372,7 +374,7 @@ li {
     color: var(--color-primary-blue);
     border: 2px solid var(--color-primary-blue);
     
-    &:hover:not(:disabled) {
+    &:focus-visible:not(:disabled) {
         background: var(--color-primary-blue);
         color: var(--color-white);
     }
@@ -382,7 +384,7 @@ li {
     background: transparent;
     color: var(--body-text);
     
-    &:hover:not(:disabled) {
+    &:focus-visible:not(:disabled) {
         background: var(--color-neutral-100);
     }
 }
@@ -392,7 +394,7 @@ li {
     color: var(--color-primary-blue);
     padding: var(--space-sm) var(--space-md);
     
-    &:hover:not(:disabled) {
+    &:focus-visible:not(:disabled) {
         background: var(--color-neutral-100);
     }
 }
@@ -419,7 +421,7 @@ li {
     font-weight: 500;
     transition: all var(--transition-fast);
     
-    &:hover {
+    &:focus-visible {
         border-color: var(--color-primary-blue);
         color: var(--color-primary-blue);
         background: var(--color-neutral-100);
@@ -454,7 +456,7 @@ li {
     padding: var(--space-2xl);
     transition: all var(--transition-base);
     
-    &:hover {
+    &:focus-visible {
         border-color: var(--color-accent);
         box-shadow: var(--shadow-lg);
     }
@@ -580,18 +582,18 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* ===== CUSTOM CURSOR ===== */
-body {
-  /* hide default cursor if we want, but let's just keep it for safety */
+#hero,
+#challenge,
+#service,
+#product,
+#about,
+#gallery,
+#partners,
+#contact {
+    scroll-margin-top: 86px;
 }
 
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  border-radius: 50%;
-  mix-blend-mode: difference;
-  transform: translate(-50%, -50%);
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--font-family-display);
 }

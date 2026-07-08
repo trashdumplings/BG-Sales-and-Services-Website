@@ -1,0 +1,127 @@
+.dashboard-table {
+  margin-top: 24px;
+}
+
+.dashboard-table__frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-color) 82%, white 18%);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent-color) 10%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 84%, white 16%), var(--surface-bg));
+  box-shadow:
+    0 24px 80px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.dashboard-table__glow {
+  position: absolute;
+  top: -90px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-color) 13%, transparent);
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.dashboard-table__glow--left {
+  left: -90px;
+}
+
+.dashboard-table__glow--right {
+  right: -120px;
+  top: auto;
+  bottom: -120px;
+}
+
+.dashboard-table__scroll {
+  position: relative;
+  overflow-x: auto;
+}
+
+.dashboard-table table {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.dashboard-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 16px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 80%, white 20%);
+  background: color-mix(in srgb, var(--surface-muted) 88%, white 12%);
+  backdrop-filter: blur(14px);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-table tbody td {
+  padding: 18px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, white 28%);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--surface-bg) 94%, white 6%);
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.dashboard-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--surface-muted) 60%, white 40%);
+}
+
+.dashboard-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent-color) 7%, var(--surface-bg));
+}
+
+.dashboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dashboard-table .text-right {
+  text-align: right;
+}
+
+.dashboard-table__empty-cell {
+  padding: 52px 24px !important;
+}
+
+.dashboard-table__empty {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.dashboard-table__empty h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+}
+
+.dashboard-table__empty p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .dashboard-table__frame {
+    border-radius: 20px;
+  }
+
+  .dashboard-table thead th,
+  .dashboard-table tbody td {
+    padding: 14px 16px;
+  }
+}

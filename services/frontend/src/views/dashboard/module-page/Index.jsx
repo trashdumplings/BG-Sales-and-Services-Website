@@ -8,6 +8,8 @@ import SystemSettings from '../../../components/dashboard/SystemSettings/SystemS
 import PersonalDashboard from '../../../components/dashboard/PersonalDashboard/PersonalDashboard';
 import WorkLogs from '../../../components/dashboard/WorkLogs/WorkLogs';
 import UserManagement from '../../../components/dashboard/UserManagement/UserManagement';
+import SystemReports from '../../../components/dashboard/SystemReports/SystemReports';
+import ProductManager from '../../../components/dashboard/ProductManager/ProductManager';
 
 const ModulePage = ({ title, icon: Icon }) => {
   const renderContent = () => {
@@ -16,6 +18,9 @@ const ModulePage = ({ title, icon: Icon }) => {
     }
     if (title === "Inventory Management") {
       return <InventoryList />;
+    }
+    if (title === "Product Management") {
+      return <ProductManager />;
     }
     if (title === "Leave Management" || title === "My Leave Requests") {
       return <LeaveManagement />;
@@ -35,6 +40,9 @@ const ModulePage = ({ title, icon: Icon }) => {
     if (title === "Admin Control Panel" || title === "User Management") {
       return <UserManagement />;
     }
+    if (title === "System Reports") {
+      return <SystemReports />;
+    }
 
     return (
       <>
@@ -49,14 +57,14 @@ const ModulePage = ({ title, icon: Icon }) => {
         <div className="stats-grid" style={{ opacity: 0.5, pointerEvents: 'none' }}>
           <div className="stat-card">
             <div className="stat-info">
-              <span className="stat-title">Feature Pending</span>
-              <span className="stat-value">--</span>
+               <span className="stat-title">Feature Pending</span>
+               <span className="stat-value">--</span>
             </div>
           </div>
           <div className="stat-card">
             <div className="stat-info">
-              <span className="stat-title">Data Loading</span>
-              <span className="stat-value">...</span>
+               <span className="stat-title">Data Loading</span>
+               <span className="stat-value">...</span>
             </div>
           </div>
         </div>

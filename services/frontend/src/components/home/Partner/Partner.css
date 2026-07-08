@@ -1,48 +1,110 @@
-@keyframes scroll {
-	0% { transform: translateX(0); }
-	100% { transform: translateX(calc(-250px * 14))}
+.partner-ribbons {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 40, 85, 0.12);
+  border-bottom: 1px solid rgba(0, 40, 85, 0.12);
+  background: rgba(0, 40, 85, 0.12);
 }
 
-.slider {
-	background: rgba(0,0,0,0.4);
-	box-shadow: 0 25px 60px -5px rgba(0, 0, 0, .35);
-	height: 100px;
-	margin: auto;
-	overflow: hidden;
-	position: relative;
-	width: 90%;
-	margin-bottom: 40px;
+.partner-ribbon {
+  position: relative;
+  overflow: hidden;
+  background: #eef3f8;
 }
 
-.slider::before,
-.slider::after {
-	background: linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-	content: "";
-	height: 100px;
-	position: absolute;
-	width: 200px;
-	z-index: 2;
+.partner-ribbon::before,
+.partner-ribbon::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  width: min(12vw, 180px);
+  pointer-events: none;
 }
 
-.slider::after {
-	right: 0;
-	top: 0;
-	transform: rotateZ(180deg);
+.partner-ribbon::before {
+  left: 0;
+  background: linear-gradient(90deg, #eef3f8, transparent);
 }
 
-.slider::before {
-	left: 0;
-	top: 0;
+.partner-ribbon::after {
+  right: 0;
+  background: linear-gradient(-90deg, #eef3f8, transparent);
 }
 
-.slide-track {
-	animation: scroll 40s linear infinite;
-	display: flex;
-	width: calc(250px * 14);
+.partner-ribbon__track {
+  width: max-content;
+  display: flex;
+  animation: partner-scroll 54s linear infinite;
+  will-change: transform;
 }
 
-.slide {
-	height: 100px;
-	width: 250px;
-	
+.partner-ribbon.is-reverse .partner-ribbon__track {
+  animation-name: partner-scroll-reverse;
+  animation-duration: 60s;
+}
+
+.partner-ribbons:hover .partner-ribbon__track {
+  animation-play-state: paused;
+}
+
+.partner-logo {
+  width: clamp(155px, 14vw, 230px);
+  height: 128px;
+  display: grid;
+  place-items: center;
+  border-right: 1px solid rgba(0, 40, 85, 0.1);
+}
+
+.partner-logo img {
+  width: 66%;
+  height: 52px;
+  object-fit: contain;
+  filter: grayscale(1) contrast(0.72);
+  opacity: 0.56;
+  mix-blend-mode: multiply;
+  transition: filter 260ms ease, opacity 260ms ease, transform 260ms ease;
+}
+
+.partner-logo:hover img {
+  filter: grayscale(0) contrast(1);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+@keyframes partner-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes partner-scroll-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 680px) {
+  .partner-logo {
+    width: 145px;
+    height: 100px;
+  }
+
+  .partner-logo img {
+    height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-ribbon {
+    overflow-x: auto;
+  }
+
+  .partner-ribbon__track {
+    animation: none;
+  }
+
+  .partner-ribbon__track > .partner-logo:nth-child(n + 16) {
+    display: none;
+  }
 }

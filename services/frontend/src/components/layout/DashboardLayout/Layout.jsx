@@ -8,6 +8,7 @@ import {
   LuCalendarDays, 
   LuClipboardList, 
   LuPackage, 
+  LuShoppingBag,
   LuUsers, 
   LuShieldCheck, 
   LuSettings, 
@@ -42,6 +43,7 @@ export default function Layout({ children }) {
     { name: 'Employees', path: '/dashboard/employees', icon: LuUsers, roles: ['hr', 'admin', 'superadmin'] },
     { name: 'Leave Mgt', path: '/dashboard/leave', icon: LuCalendarDays, roles: ['hr', 'superadmin'] },
     { name: 'Inventory', path: '/dashboard/inventory', icon: LuPackage, roles: ['admin', 'superadmin'] },
+    { name: 'Products', path: '/dashboard/products', icon: LuShoppingBag, roles: ['admin', 'superadmin'] },
     { name: 'Reports', path: '/dashboard/reports', icon: FiBarChart2, roles: ['hr', 'admin', 'superadmin'] },
     
     { name: 'Admin', path: '/dashboard/admin-panel', icon: LuShieldCheck, roles: ['admin', 'superadmin'] },

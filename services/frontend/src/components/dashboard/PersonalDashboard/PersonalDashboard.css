@@ -87,7 +87,7 @@
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-.check-btn:hover {
+.check-btn:focus-visible {
   transform: scale(1.05);
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
@@ -188,7 +188,7 @@
   transition: background 0.2s;
 }
 
-.att-row:hover {
+.att-row:focus-visible {
   background: color-mix(in srgb, var(--color-primary-blue) 7%, var(--surface-muted));
 }
 

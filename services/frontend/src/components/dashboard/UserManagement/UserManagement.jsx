@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../stores/AuthProvider';
 import { LuFilter, LuPlus, LuUserCheck } from 'react-icons/lu';
 import { FiEdit } from 'react-icons/fi';
+import DashboardTable from '../../common/DashboardTable/DashboardTable';
 import './UserManagement.css';
+
+const userColumns = [
+  { key: 'name', label: 'Name', width: '18%' },
+  { key: 'employeeId', label: 'CID (Emp ID)', width: '14%' },
+  { key: 'email', label: 'Email', width: '18%' },
+  { key: 'phone', label: 'Phone', width: '12%' },
+  { key: 'department', label: 'Department', width: '14%' },
+  { key: 'position', label: 'Position', width: '14%' },
+  { key: 'status', label: 'Status', width: '6%' },
+  { key: 'actions', label: 'Actions', align: 'right', width: '4%' },
+];
 
 const UserManagement = () => {
   const { token } = useAuth();
@@ -147,48 +159,44 @@ const UserManagement = () => {
       </div>
 
       <div className="table-wrapper">
-        <table className="user-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>CID (Emp ID)</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Department</th>
-              <th>Position</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map(user => (
-                <tr key={user.id}>
-                  <td className="font-medium">{user.name}</td>
-                  <td>{user.employee_id || '-'}</td>
-                  <td>{user.email}</td>
-                  <td>{user.phone || '-'}</td>
-                  <td>{user.department || '-'}</td>
-                  <td>{user.position || '-'}</td>
-                  <td>
-                    <div className={`status-toggle ${user.is_active ? 'active' : ''}`}>
-                      <div className="toggle-slider"></div>
-                    </div>
-                  </td>
-                  <td>
-                    <button className="action-btn edit" title="Edit User">
-                      <FiEdit />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="no-data">No users found for this role.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <DashboardTable
+          columns={userColumns}
+          rows={filteredUsers}
+          rowKey="id"
+          minWidth={1080}
+          emptyTitle="No users found for this role"
+          emptyDescription="Switch role tabs or add a new user to see records here."
+          renderCell={(user, column) => {
+            switch (column.key) {
+              case 'name':
+                return <span className="font-medium">{user.name}</span>;
+              case 'employeeId':
+                return user.employee_id || '-';
+              case 'email':
+                return user.email;
+              case 'phone':
+                return user.phone || '-';
+              case 'department':
+                return user.department || '-';
+              case 'position':
+                return user.position || '-';
+              case 'status':
+                return (
+                  <div className={`status-toggle ${user.is_active ? 'active' : ''}`}>
+                    <div className="toggle-slider"></div>
+                  </div>
+                );
+              case 'actions':
+                return (
+                  <button className="action-btn edit" title="Edit User">
+                    <FiEdit />
+                  </button>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
         <div className="table-footer">
           <span>Total: {filteredUsers.length} items</span>
           <div className="pagination">
