@@ -11,6 +11,7 @@ import adbLogo from '../assets/logo/ADB logo.png'
 import tBankLogo from '../assets/logo/T bank logo.jpg'
 import dgpcLogo from '../assets/logo/DGPC logo.png'
 import worldBankLogo from '../assets/logo/world bank logo.jpg'
+import bitdeerLogo from '../assets/logo/bitdeer-logo.svg'
 import bnbLogo from '../assets/logo/BNB logo.png'
 import ministryHealthLogo from '../assets/logo/Ministry of health logo.png'
 import govtechLogo from '../assets/logo/Govtech logo.png'
@@ -53,6 +54,7 @@ export const projectsData = [
   {
     id: 5,
     clientName: 'Bitdeer',
+    logo: bitdeerLogo,
     serviceType: 'Air-Conditioning Supply & Installation',
     scope: 'Supplied and installed air-conditioning systems for Bitdeer, providing the equipment and on-site installation needed for dependable facility cooling.',
     status: 'Completed'
