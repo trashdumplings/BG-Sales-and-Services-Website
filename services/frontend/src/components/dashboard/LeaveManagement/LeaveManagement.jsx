@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getLeaves, getLeaveBalance, createLeave, approveLeave, rejectLeave } from '../../../utils/api';
 import { useAuth } from '../../../stores/AuthProvider';
 import { LuCalendar, LuCircleCheck, LuCircleX, LuClock, LuInfo, LuPlus, LuList } from 'react-icons/lu';
 import LeaveCalendar from '../LeaveCalendar/LeaveCalendar';
 import DashboardTable from '../../common/DashboardTable/DashboardTable';
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback';
 import './LeaveManagement.css';
 
 const leaveColumns = (isManagement) => [
@@ -16,6 +17,7 @@ const leaveColumns = (isManagement) => [
 ];
 
 const LeaveManagement = () => {
+  const { notify } = useSystemFeedback();
   const { token, user } = useAuth();
   const [leaves, setLeaves] = useState([]);
   const [balance, setBalance] = useState(null);
@@ -33,7 +35,7 @@ const LeaveManagement = () => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [leavesData, balanceData] = await Promise.all([
@@ -47,13 +49,13 @@ const LeaveManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchData();
     }
-  }, [token]);
+  }, [fetchData, token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -69,7 +71,7 @@ const LeaveManagement = () => {
       setShowModal(false);
       setFormData({ leave_type: 'annual', start_date: '', end_date: '', reason: '' });
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -86,13 +88,14 @@ const LeaveManagement = () => {
       }
       await fetchData();
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     }
   };
 
   if (loading) return <div className="loading-state">Loading leave data...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
 
-  const isManagement = ['admin', 'superadmin', 'hr'].includes(user?.role);
+  const isManagement = ['superadmin', 'hr'].includes(user?.role);
 
   return (
     <div className="leave-mgmt-container">
@@ -225,7 +228,6 @@ const LeaveManagement = () => {
                   value={formData.reason} 
                   onChange={handleInputChange} 
                   rows="3" 
-                  style={{ background: 'var(--surface-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--body-text)', padding: '10px' }}
                 />
               </div>
               <div className="form-actions">

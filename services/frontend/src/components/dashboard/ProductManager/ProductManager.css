@@ -100,7 +100,7 @@
 .product-manager__notice {
   border: 1px solid rgba(34, 197, 94, 0.28);
   background: rgba(34, 197, 94, 0.09);
-  color: #16a34a;
+  color: var(--status-success);
 }
 
 .product-manager__notice button {
@@ -114,7 +114,7 @@
 .product-manager__error {
   border: 1px solid rgba(239, 68, 68, 0.24);
   background: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
+  color: var(--status-danger);
 }
 
 .product-manager__catalog {
@@ -252,11 +252,11 @@
 .product-manager__visibility.is-live {
   border-color: rgba(34, 197, 94, 0.22);
   background: rgba(34, 197, 94, 0.08);
-  color: #16a34a;
+  color: var(--status-success);
 }
 
 .is-low-stock {
-  color: #f59e0b;
+  color: var(--status-warning);
   font-weight: 800;
 }
 
@@ -278,7 +278,7 @@
 }
 
 .product-manager__actions button.danger {
-  color: #ef4444;
+  color: var(--status-danger);
 }
 
 .product-manager__empty {

@@ -1,16 +1,12 @@
 import React from 'react';
 import Layout from '../../../components/layout/DashboardLayout/Layout';
-import { useAuth } from '../../../stores/AuthProvider';
 import { 
   LuUsers, 
-  LuCalendarDays, 
-  LuHistory 
+  LuCalendarDays
 } from 'react-icons/lu';
 import { FiBarChart2 } from 'react-icons/fi';
 
 export default function HR() {
-  const { user } = useAuth();
-
   const stats = [
     { title: 'Total Employees', value: '86', icon: LuUsers, color: '#38bdf8' },
     { title: 'Pending Leaves', value: '12', icon: LuCalendarDays, color: '#f43f5e' },

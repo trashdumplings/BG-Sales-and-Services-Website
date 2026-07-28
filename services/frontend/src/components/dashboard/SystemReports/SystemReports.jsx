@@ -44,7 +44,7 @@ export default function SystemReports() {
   const [reportData, setReportData] = useState(null)
   const [alertsData, setAlertsData] = useState([])
 
-  const hasAccess = ['superadmin', 'admin', 'hr'].includes(user?.role)
+  const hasAccess = ['superadmin', 'hr'].includes(user?.role)
 
   useEffect(() => {
     if (authLoading || !token || !hasAccess) return
@@ -74,7 +74,7 @@ export default function SystemReports() {
     fetchData()
   }, [authLoading, currentDate, hasAccess, token])
 
-  const employeeSummary = reportData?.employee_summary || []
+  const employeeSummary = useMemo(() => reportData?.employee_summary || [], [reportData])
   const popularProducts = reportData?.popular_products || []
 
   const derived = useMemo(() => {

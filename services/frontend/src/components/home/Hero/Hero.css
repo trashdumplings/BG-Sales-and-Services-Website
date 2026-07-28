@@ -1,4 +1,4 @@
-.cinematic-hero {
+﻿.cinematic-hero {
   position: relative;
   min-height: 108svh;
   overflow: hidden;
@@ -6,7 +6,7 @@
   align-items: center;
   padding: 112px clamp(22px, 4.8vw, 74px) 92px;
   color: #f5f8ff;
-  background: #001233;
+  background: var(--brand-ink);
   isolation: isolate;
 }
 
@@ -65,6 +65,42 @@
   justify-content: space-between;
 }
 
+.cinematic-hero.is-anime-ready [data-hero-meta],
+.cinematic-hero.is-anime-ready [data-hero-line],
+.cinematic-hero.is-anime-ready [data-hero-support],
+.cinematic-hero.is-anime-ready [data-signal-node] {
+  opacity: 0;
+}
+
+.cinematic-hero__signal {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: clamp(24px, 4.8vw, 74px);
+  width: clamp(110px, 12vw, 180px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.cinematic-hero__signal span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(196, 226, 255, 0.84);
+  border-radius: 50%;
+  background: var(--brand-blue);
+  box-shadow: 0 0 18px rgba(73, 154, 235, 0.72);
+}
+
+.cinematic-hero__signal i {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(196, 226, 255, 0.22), rgba(196, 226, 255, 0.78));
+  transform-origin: left;
+}
+
 .cinematic-hero__meta {
   display: flex;
   justify-content: space-between;
@@ -99,7 +135,7 @@
   width: max-content;
   margin-top: 0.08em;
   margin-left: clamp(14%, 25vw, 35%);
-  color: #87bfff;
+  color: var(--brand-blue-pale);
   font-size: clamp(4rem, 8.7vw, 10rem);
   font-style: italic;
 }
@@ -148,16 +184,16 @@
 
 .cinematic-link:focus-visible,
 .cinematic-hero__footer a:focus-visible {
-  outline: 3px solid #87bfff;
+  outline: 3px solid var(--brand-blue-pale);
   outline-offset: 4px;
 }
 
 .cinematic-link--primary {
-  background: #0466c8;
+  background: var(--brand-blue);
 }
 
 .cinematic-link--primary:hover {
-  background: #0353a4;
+  background: var(--brand-blue-deep);
 }
 
 .cinematic-link--secondary {
@@ -197,7 +233,7 @@
 .cinematic-hero__footer i {
   width: 46px;
   height: 1px;
-  background: #0466c8;
+  background: var(--brand-blue);
   transform-origin: left;
 }
 
@@ -224,6 +260,10 @@
 
   .cinematic-hero__actions {
     justify-content: flex-start;
+  }
+
+  .cinematic-hero__signal {
+    display: none;
   }
 }
 
@@ -307,6 +347,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cinematic-hero__image {
+    transform: none !important;
+  }
+
+  .cinematic-hero [data-hero-meta],
+  .cinematic-hero [data-hero-line],
+  .cinematic-hero [data-hero-support],
+  .cinematic-hero [data-signal-node] {
+    opacity: 1 !important;
     transform: none !important;
   }
 }

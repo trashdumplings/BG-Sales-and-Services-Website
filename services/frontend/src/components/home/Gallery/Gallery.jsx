@@ -1,6 +1,6 @@
 import './Gallery.css'
 import { useMemo, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { FiArrowDown, FiArrowUpRight } from 'react-icons/fi'
 import { projectsData } from '../../../stores/Data'
 import worldBankImage from '../../../assets/landing-bhutan/project-world-bank.jpg'

@@ -5,10 +5,10 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from .api import routers
-from .db import engine, Base
+from .db import engine, Base, SessionLocal
 from .config import get_settings
 from .services.products import UPLOAD_DIR
-from .utils.auth import get_current_user
+from .utils.auth import get_current_user, users_with_default_passwords
 from .models import User
 
 settings = get_settings()
@@ -35,7 +35,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts_list)
-if not settings.DEBUG:
+if settings.ENFORCE_HTTPS:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # CORS setup
@@ -58,8 +58,19 @@ def on_startup():
             print("Database connection successful and tables created/verified")
         else:
             print("Database connection successful; AUTO_CREATE_TABLES disabled, expecting Alembic-managed schema")
+        if not settings.DEBUG:
+            with SessionLocal() as db:
+                unsafe_users = users_with_default_passwords(
+                    db.query(User).filter(User.is_active.is_(True)).all()
+                )
+            if unsafe_users:
+                raise RuntimeError(
+                    "Production startup refused: default passwords remain for "
+                    + ", ".join(unsafe_users)
+                )
     except Exception as e:
-        print(f"Database connection error: {e}")
+        print(f"Startup validation error: {e}")
+        raise
 
 # Include routers
 for router in routers:

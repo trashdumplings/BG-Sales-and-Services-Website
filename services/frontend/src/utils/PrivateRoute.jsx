@@ -26,7 +26,7 @@ export default function PrivateRoute() {
   }
 
   // Basic role-based access control
-  const roles = ['superadmin', 'admin', 'hr', 'employee'];
+  const roles = ['superadmin', 'hr', 'employee'];
   const pathParts = location.pathname.split('/').filter(Boolean);
   
   // If at root /dashboard, redirect to the user's role dashboard
@@ -37,6 +37,23 @@ export default function PrivateRoute() {
   // If trying to access another core role dashboard directly, redirect to own
   const potentialRole = pathParts[1];
   if (roles.includes(potentialRole) && potentialRole !== user.role) {
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
+  }
+
+  const modulePermissionByPath = {
+    products: 'products',
+    inventory: 'inventory',
+    reports: 'reports',
+    employees: 'employees',
+  };
+  const requiredPermission = modulePermissionByPath[pathParts[1]];
+  const hasRoleDefault = user.role === 'hr' && ['reports', 'employees'].includes(requiredPermission);
+  if (
+    requiredPermission
+    && user.role !== 'superadmin'
+    && !hasRoleDefault
+    && !(user.module_permissions || []).includes(requiredPermission)
+  ) {
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 

@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from .models import UserRole
 
 # Auth schemas
@@ -33,6 +33,7 @@ class UserOut(BaseModel):
     name: str
     email: EmailStr
     role: UserRole
+    module_permissions: List[str] = Field(default_factory=list)
     is_active: bool
     last_login: Optional[datetime] = None
     created_at: datetime
@@ -45,7 +46,40 @@ class RegisterIn(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: UserRole = UserRole.employee
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        classes = (
+            any(char.islower() for char in value),
+            any(char.isupper() for char in value),
+            any(char.isdigit() for char in value),
+            any(not char.isalnum() for char in value),
+        )
+        if sum(classes) < 3:
+            raise ValueError("Password must use at least three of: lowercase, uppercase, number, symbol")
+        return value
+
+class ProfileUpdate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+    phone: Optional[str] = Field(default=None, max_length=30)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return " ".join(value.split())
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 # Employee schemas
 class EmployeeCreate(BaseModel):
@@ -279,7 +313,6 @@ class CombinedUserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
-    employee_id: str
     first_name: str
     last_name: str
     phone: Optional[str] = None
@@ -288,12 +321,32 @@ class CombinedUserCreate(BaseModel):
     salary: Optional[float] = None
     hire_date: datetime
 
+    @field_validator("role")
+    @classmethod
+    def validate_supported_role(cls, value: UserRole) -> UserRole:
+        if value not in {UserRole.superadmin, UserRole.hr, UserRole.employee}:
+            raise ValueError("Role must be one of: superadmin, hr, employee")
+        return value
+
+    @field_validator("phone")
+    @classmethod
+    def validate_bhutan_phone(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        digits = "".join(char for char in value if char.isdigit())
+        if digits.startswith("975"):
+            digits = digits[3:]
+        if len(digits) != 8 or not digits.startswith(("17", "77")):
+            raise ValueError("Enter a valid Bhutan mobile number starting with 17 or 77")
+        return f"+975{digits}"
+
 class CombinedUserOut(BaseModel):
     id: int
     name: str
     email: str
     role: str
     is_active: bool
+    module_permissions: List[str] = Field(default_factory=list)
     employee_id: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
@@ -301,3 +354,15 @@ class CombinedUserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ModulePermissionsUpdate(BaseModel):
+    permissions: List[str] = Field(default_factory=list)
+
+    @field_validator("permissions")
+    @classmethod
+    def validate_permissions(cls, values: List[str]) -> List[str]:
+        allowed = {"products", "inventory", "reports", "employees"}
+        invalid = set(values) - allowed
+        if invalid:
+            raise ValueError(f"Unsupported module permissions: {', '.join(sorted(invalid))}")
+        return sorted(set(values))

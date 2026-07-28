@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getSettings, updateSetting } from '../../../utils/api';
 import { useAuth } from '../../../stores/AuthProvider';
-import { LuSettings, LuSave, LuRefreshCw, LuInfo } from 'react-icons/lu';
+import { LuSave, LuRefreshCw, LuInfo } from 'react-icons/lu';
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback';
 import './SystemSettings.css';
 
 const SystemSettings = () => {
+  const { notify } = useSystemFeedback();
   const { token } = useAuth();
   const [settings, setSettings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(null); // Key being saved
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getSettings(token);
@@ -21,11 +23,11 @@ const SystemSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) fetchSettings();
-  }, [token]);
+  }, [fetchSettings, token]);
 
   const handleUpdate = async (key, value) => {
     setSaving(key);
@@ -33,7 +35,7 @@ const SystemSettings = () => {
       await updateSetting(token, key, value);
       await fetchSettings();
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setSaving(null);
     }
@@ -44,6 +46,7 @@ const SystemSettings = () => {
   };
 
   if (loading) return <div className="loading-state">Loading settings...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
 
   const categories = [...new Set(settings.map(s => s.category))];
 
@@ -51,7 +54,7 @@ const SystemSettings = () => {
     <div className="system-settings-container">
       <div className="settings-header">
         <p>Manage global system parameters and application behavior.</p>
-        <button className="refresh-btn" onClick={fetchSettings}><LuRefreshCw /> Refresh</button>
+        <button type="button" className="refresh-btn" onClick={fetchSettings}><LuRefreshCw aria-hidden="true" /> Refresh</button>
       </div>
 
       <div className="settings-grid">

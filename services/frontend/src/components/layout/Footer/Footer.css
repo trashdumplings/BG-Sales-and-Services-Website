@@ -1,14 +1,14 @@
 /* ===== FOOTER SECTION ===== */
 
 .footer {
-    background: linear-gradient(180deg, var(--neutral-50), var(--neutral-100));
+    background: linear-gradient(180deg, var(--color-neutral-50), var(--color-neutral-100));
     border-top: 1px solid var(--border-color);
     margin-top: 0;
     padding: var(--space-3xl) 0 var(--space-xl) 0;
 }
 
 [data-theme="dark"] .footer {
-    background: linear-gradient(180deg, var(--neutral-900), var(--neutral-800));
+    background: linear-gradient(180deg, var(--color-neutral-900), var(--color-neutral-800));
 }
 
 /* Main Footer Container */

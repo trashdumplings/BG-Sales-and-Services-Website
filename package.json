@@ -11,13 +11,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "analyze": "npm run build && vite-bundle-visualizer",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives"
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives",
+    "test": "node --test tests/frontend/*.test.mjs"
   },
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
     "@vercel/speed-insights": "^1.0.10",
+    "animejs": "^4.5.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.0.3",
+    "motion": "^12.42.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",

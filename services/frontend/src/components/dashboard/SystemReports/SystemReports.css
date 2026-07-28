@@ -167,25 +167,25 @@
 .reports-kpi--hours .reports-kpi__icon,
 .reports-insight--neutral svg {
   background: rgba(4, 102, 200, 0.12);
-  color: #0466c8;
+  color: var(--brand-blue);
 }
 
 .reports-kpi--leaves .reports-kpi__icon,
 .reports-insight--warning svg {
   background: rgba(245, 158, 11, 0.14);
-  color: #d97706;
+  color: var(--status-warning);
 }
 
 .reports-kpi--people .reports-kpi__icon,
 .reports-insight--positive svg {
   background: rgba(16, 185, 129, 0.14);
-  color: #059669;
+  color: var(--status-success);
 }
 
 .reports-kpi--alerts .reports-kpi__icon,
 .reports-insight--critical svg {
   background: rgba(239, 68, 68, 0.14);
-  color: #dc2626;
+  color: var(--status-danger);
 }
 
 .reports-insights {
@@ -320,7 +320,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0466c8, #38bdf8);
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-blue-pale));
 }
 
 .reports-meter small {

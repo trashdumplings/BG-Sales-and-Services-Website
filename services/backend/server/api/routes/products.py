@@ -15,7 +15,7 @@ from ...services.products import (
     upload_product_image_service,
     update_catalog_product_service,
 )
-from ...utils.auth import require_admin_or_superadmin
+from ...utils.auth import require_module_permission
 
 router = APIRouter(prefix="/api/products", tags=["Website Products"])
 
@@ -50,7 +50,7 @@ def record_product_interaction(
 async def upload_product_image(
     request: Request,
     image: UploadFile = File(...),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("products")),
 ):
     return await upload_product_image_service(request, image)
 
@@ -58,7 +58,7 @@ async def upload_product_image(
 @router.get("", response_model=List[CatalogProductOut])
 def list_products(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("products")),
 ):
     return list_catalog_products_service(db)
 
@@ -67,7 +67,7 @@ def list_products(
 def create_product(
     payload: CatalogProductCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("products")),
 ):
     return create_catalog_product_service(db, payload)
 
@@ -77,7 +77,7 @@ def update_product(
     product_id: int,
     payload: CatalogProductUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("products")),
 ):
     return update_catalog_product_service(db, product_id, payload)
 
@@ -86,7 +86,7 @@ def update_product(
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("products")),
 ):
     delete_catalog_product_service(db, product_id)
     return Response(status_code=204)

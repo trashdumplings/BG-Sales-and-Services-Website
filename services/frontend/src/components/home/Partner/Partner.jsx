@@ -1,4 +1,7 @@
 import './Partner.css'
+import { useEffect, useRef } from 'react'
+import { animate, stagger } from 'animejs'
+import { useReducedMotion } from 'motion/react'
 import threeCThree from '../../../assets/partners/3C3.png'
 import cisco from '../../../assets/partners/cisco.png'
 import belden from '../../../assets/partners/belden.jpeg'
@@ -61,12 +64,12 @@ const partners = [
   { logo: hydai, name: 'Hydai' },
 ]
 
-const PartnerRow = ({ items, reverse = false }) => {
+const PartnerRow = ({ items, reverse = false, trackRef }) => {
   const repeatedItems = [...items, ...items]
 
   return (
     <div className={`partner-ribbon ${reverse ? 'is-reverse' : ''}`}>
-      <div className="partner-ribbon__track">
+      <div className="partner-ribbon__track" ref={trackRef}>
         {repeatedItems.map((partner, index) => (
           <div className="partner-logo" key={`${partner.name}-${index}`}>
             <img src={partner.logo} alt={partner.name} loading="lazy" />
@@ -79,11 +82,78 @@ const PartnerRow = ({ items, reverse = false }) => {
 
 const Partner = () => {
   const midpoint = Math.ceil(partners.length / 2)
+  const rootRef = useRef(null)
+  const firstTrackRef = useRef(null)
+  const secondTrackRef = useRef(null)
+  const animationsRef = useRef([])
+  const reduceMotion = useReducedMotion()
+
+  useEffect(() => {
+    const root = rootRef.current
+    const tracks = [firstTrackRef.current, secondTrackRef.current].filter(Boolean)
+    if (!root || !tracks.length || reduceMotion) return undefined
+
+    animationsRef.current = tracks.map((track, index) => {
+      const movement = index === 0 ? ['0%', '-50%'] : ['-50%', '0%']
+      const animation = animate(track, {
+        x: movement,
+        duration: index === 0 ? 54000 : 60000,
+        ease: 'linear',
+        loop: true,
+      })
+      animation.pause()
+      return animation
+    })
+
+    const logoReveal = animate(
+      root.querySelectorAll('.partner-logo:nth-child(-n + 12) img'),
+      {
+        opacity: [0, 0.56],
+        y: [14, 0],
+        duration: 620,
+        delay: stagger(42),
+        ease: 'outCubic',
+        autoplay: false,
+      },
+    )
+
+    let hasRevealed = false
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        animationsRef.current.forEach((animation) => (
+          entry.isIntersecting ? animation.play() : animation.pause()
+        ))
+        if (entry.isIntersecting && !hasRevealed) {
+          hasRevealed = true
+          logoReveal.play()
+        }
+      },
+      { rootMargin: '120px 0px', threshold: 0.05 },
+    )
+
+    observer.observe(root)
+    return () => {
+      observer.disconnect()
+      logoReveal.revert()
+      animationsRef.current.forEach((animation) => animation.revert())
+      animationsRef.current = []
+    }
+  }, [reduceMotion])
+
+  const pauseRibbons = () => animationsRef.current.forEach((animation) => animation.pause())
+  const resumeRibbons = () => animationsRef.current.forEach((animation) => animation.play())
 
   return (
-    <div className="partner-ribbons">
-      <PartnerRow items={partners.slice(0, midpoint)} />
-      <PartnerRow items={partners.slice(midpoint)} reverse />
+    <div
+      className="partner-ribbons"
+      ref={rootRef}
+      onMouseEnter={pauseRibbons}
+      onMouseLeave={resumeRibbons}
+      onFocusCapture={pauseRibbons}
+      onBlurCapture={resumeRibbons}
+    >
+      <PartnerRow items={partners.slice(0, midpoint)} trackRef={firstTrackRef} />
+      <PartnerRow items={partners.slice(midpoint)} reverse trackRef={secondTrackRef} />
     </div>
   )
 }

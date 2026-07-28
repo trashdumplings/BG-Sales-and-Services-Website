@@ -55,7 +55,7 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      const user = await apiRegister(
+      await apiRegister(
         formData.name,
         formData.email,
         formData.password,
@@ -147,7 +147,6 @@ export default function SignUp() {
             >
               <option value="employee">Employee</option>
               <option value="hr">HR</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 

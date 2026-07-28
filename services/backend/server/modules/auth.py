@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from ..db import get_db
 from ..models import User, UserRole, UserSession
-from ..schemas import TokenResponse, UserOut, RegisterIn, SessionOut, ChallengeOut
+from ..schemas import TokenResponse, UserOut, RegisterIn, SessionOut, ChallengeOut, PasswordChange
 from ..utils.auth import (
     authenticate_user, 
     create_access_token, 
@@ -15,6 +15,7 @@ from ..utils.auth import (
     create_session_tokens,
     decode_refresh_token,
     get_password_hash, 
+    verify_password,
     set_refresh_cookie, 
     clear_refresh_cookie,
     get_current_user,
@@ -31,6 +32,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 FAILED_LOGIN_WINDOW_MINUTES = 15
 FAILED_LOGIN_LIMIT = 5
+# Absolute ceiling within the window that no solved captcha can bypass. Without this,
+# a scripted client can keep fetching a fresh /auth/challenge and solving the trivial
+# arithmetic answer to guess passwords at unlimited speed.
+HARD_LOCKOUT_LIMIT = 10
 CAPTCHA_TRIGGER_ATTEMPTS = 3
 CHALLENGE_TTL_SECONDS = 300
 failed_login_attempts = {}
@@ -49,6 +54,14 @@ def enforce_login_throttle(request: Request, username: str, challenge_verified: 
         if attempt > now - timedelta(minutes=FAILED_LOGIN_WINDOW_MINUTES)
     ]
     failed_login_attempts[key] = attempts
+    if len(attempts) >= HARD_LOCKOUT_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "message": "Too many failed login attempts. Try again later.",
+                "captcha_required": True,
+            },
+        )
     if len(attempts) >= FAILED_LOGIN_LIMIT and not challenge_verified:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -167,7 +180,7 @@ def login(
 
     return TokenResponse(
         access_token=access_token,
-        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role},
+        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role, "module_permissions": user.module_permissions or []},
     )
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -230,7 +243,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
 
     return TokenResponse(
         access_token=access_token,
-        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role},
+        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role, "module_permissions": user.module_permissions or []},
     )
 
 @router.post("/logout", status_code=204)
@@ -252,6 +265,26 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserOut)
 def read_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.post("/change-password", status_code=204)
+def change_password(
+    payload: PasswordChange,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if verify_password(payload.new_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="New password must be different")
+    current_user.password_hash = get_password_hash(payload.new_password)
+    sessions = db.query(UserSession).filter(
+        UserSession.user_id == current_user.id,
+        UserSession.revoked_at.is_(None),
+    ).all()
+    for session in sessions:
+        revoke_session(db, session, "password_changed")
+    db.commit()
+    return None
 
 @router.get("/sessions", response_model=list[SessionOut])
 def list_sessions(

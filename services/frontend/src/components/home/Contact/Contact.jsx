@@ -1,6 +1,6 @@
 import './Contact.css'
 import { useState } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'motion/react'
 import { FiArrowUpRight, FiCheck, FiMail, FiMapPin, FiPhone } from 'react-icons/fi'
 
 const mapEmbed =

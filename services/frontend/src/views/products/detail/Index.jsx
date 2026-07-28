@@ -6,8 +6,11 @@ import {
   FiArrowUpRight,
   FiCheckCircle,
   FiFileText,
+  FiMail,
   FiPackage,
+  FiSearch,
 } from 'react-icons/fi'
+import logo from '../../../assets/logo.png'
 import products, { getProductBySlug } from '../../../stores/Data'
 import { getPublicProducts } from '../../../utils/api'
 import { mergeCatalogProducts } from '../../../utils/catalogProducts'
@@ -57,6 +60,25 @@ export default function ProductDetail() {
     .filter((item) => item.category === product.category && item.slug !== product.slug)
     .slice(0, 3)
 
+  const isUsefulCopy = (value) => {
+    const normalized = String(value || '').trim()
+    return normalized.length >= 12 && !/^(test|testing|n\/a|none)$/i.test(normalized)
+  }
+  const summary = isUsefulCopy(product.description)
+    ? product.description
+    : 'A business-ready product available through BG Sales with quotation, delivery, and deployment support.'
+  const overview = isUsefulCopy(product.shortDescription)
+    ? product.shortDescription
+    : 'Detailed product information is available from our sales team.'
+  const usefulSpecs = (product.specs || []).filter(isUsefulCopy)
+  const displayedSpecs = usefulSpecs.length
+    ? usefulSpecs.slice(0, 5)
+    : [
+        'Official specification sheet available on request',
+        'Business and project pricing available',
+        'Delivery and deployment support included',
+      ]
+
   const quoteHref = `mailto:bgsales@outlook.com?subject=${encodeURIComponent(
     `Quotation request - ${product.title}`,
   )}&body=${encodeURIComponent(`Product: ${product.title}\nQuantity:\nContact:\nMessage:`)}`
@@ -69,22 +91,53 @@ export default function ProductDetail() {
 
   return (
     <div className="product-detail-page">
-      <div className="product-detail-shell">
-        <Link to="/product" className="product-detail-back">
-          <FiArrowLeft /> Back to catalog
+      <div className="product-store-announcement">Technology sourcing and procurement support across Bhutan</div>
+      <header className="product-store-header">
+        <Link to="/" className="product-store-header__brand" aria-label="BG Sales and Supplies home">
+          <img src={logo} alt="" />
+          <span>BG Sales &amp; Supplies</span>
         </Link>
+
+        <nav className="product-store-header__links" aria-label="Product categories">
+          <Link to="/product">All products</Link>
+          <Link to="/products/laptops">Laptops</Link>
+          <Link to="/products/desktops">Desktops</Link>
+          <Link to="/products/printers">Printers</Link>
+        </nav>
+
+        <div className="product-store-header__actions">
+          <form className="product-store-search" action="/product" role="search">
+            <label className="sr-only" htmlFor="product-detail-search">Search products</label>
+            <input id="product-detail-search" name="search" type="search" placeholder="Search products..." />
+            <button type="submit" aria-label="Search products"><FiSearch /></button>
+          </form>
+          <a className="product-store-contact" href="mailto:bgsales@outlook.com">
+            <FiMail /> <span>Contact sales</span>
+          </a>
+        </div>
+      </header>
+
+      <div className="product-detail-shell">
+        <nav className="product-detail-breadcrumb" aria-label="Breadcrumb">
+          <Link to="/product" className="product-detail-breadcrumb__back"><FiArrowLeft /> Products</Link>
+          <span aria-hidden="true">/</span>
+          <Link to={`/products/${product.category}`}>{product.categoryLabel}</Link>
+          <span aria-hidden="true">/</span>
+          <span>{product.title}</span>
+        </nav>
 
         <section className="product-detail-hero">
           <div className="product-detail-media">
             <img src={product.image} alt={product.title} />
+            <span className="product-detail-media__note">Product image</span>
           </div>
 
           <div className="product-detail-content">
             <span className="product-detail-kicker">
-              {product.categoryLabel} / {product.brand}
+              {product.brand} · {product.categoryLabel}
             </span>
             <h1>{product.title}</h1>
-            <p className="product-detail-summary">{product.description}</p>
+            <p className="product-detail-summary">{summary}</p>
 
             <div className="product-detail-pricing">
               <strong>{formatCurrency(product.price)}</strong>
@@ -100,48 +153,46 @@ export default function ProductDetail() {
               </span>
             </div>
 
+            <div className="product-detail-facts">
+              <h2>Product details</h2>
+              <ul>
+                {displayedSpecs.map((spec) => (
+                  <li key={spec}>
+                    <FiCheckCircle /> <span>{spec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <div className="product-detail-actions">
               <a className="product-detail-btn primary" href={quoteHref}>
                 <FiFileText /> Request Quote
               </a>
-              <Link className="product-detail-btn secondary" to={`/products/${product.category}`}>
-                More in {product.categoryLabel}
-              </Link>
+              <a className="product-detail-btn secondary" href="mailto:bgsales@outlook.com">
+                <FiMail /> Contact sales
+              </a>
             </div>
+            <p className="product-detail-response-note">Our sales team usually responds within one business day.</p>
+            <Link className="product-detail-category-link" to={`/products/${product.category}`}>
+              Browse more {product.categoryLabel} <FiArrowUpRight />
+            </Link>
           </div>
         </section>
 
-        <section className="product-detail-sections">
-          <article className="product-detail-panel">
+        <section className="product-detail-overview">
+          <span>About this product</span>
+          <div>
             <h2>Overview</h2>
-            <p>{product.shortDescription}</p>
-            <p>
-              This storefront flow is designed for marketing and sales discovery first, with a
-              quotation-led commercial journey for teams that need project pricing, deployment
-              support, or bulk procurement.
-            </p>
-          </article>
-
-          <article className="product-detail-panel">
-            <h2>Key Specifications</h2>
-            <ul>
-              {product.specs.map((spec) => (
-                <li key={spec}>
-                  <FiCheckCircle /> {spec}
-                </li>
-              ))}
-            </ul>
-          </article>
+            <p>{overview}</p>
+            <p>Suitable for organizations that need dependable sourcing, confirmed availability, project pricing, and deployment support.</p>
+          </div>
         </section>
 
         <section className="product-detail-procurement">
           <div>
-            <span>Procurement support</span>
-            <h2>Buying for a team or project?</h2>
-            <p>
-              BG Sales can help confirm availability, prepare quotations, source alternatives,
-              and support deployment for offices, schools, counters, and project sites.
-            </p>
+            <span>Volume procurement</span>
+            <h2>Need multiple units?</h2>
+            <p>Ask about project pricing, delivery coordination, installation, and alternative models.</p>
           </div>
           <a href={bulkQuoteHref}>
             Start bulk inquiry <FiArrowUpRight />

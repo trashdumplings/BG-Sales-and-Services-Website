@@ -24,7 +24,7 @@ export default function Admin() {
   return (
     <Layout>
       <div className="dash-hero">
-        <h1>Welcome back, {isSuperAdmin ? 'Super Admin' : 'Admin'}!</h1>
+        <h1>Welcome back, Super Admin!</h1>
         <p>System status is nominal. All services are currently operational.</p>
       </div>
 
@@ -51,11 +51,13 @@ export default function Admin() {
 
       <h2 className="section-title">Quick Actions</h2>
       <div className="card-grid">
-        <div className="card action-card">
-          <LuUsers className="card-icon" />
-          <h3>Manage Users</h3>
-          <p>Create, update or deactivate user accounts.</p>
-        </div>
+        {isSuperAdmin && (
+          <div className="card action-card">
+            <LuUsers className="card-icon" />
+            <h3>Manage Users</h3>
+            <p>Create, update or deactivate user accounts.</p>
+          </div>
+        )}
         <div className="card action-card">
           <LuHistory className="card-icon" />
           <h3>System Audit</h3>

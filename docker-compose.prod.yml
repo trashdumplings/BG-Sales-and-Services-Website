@@ -1,0 +1,130 @@
+# Production stack: Caddy terminates TLS (automatic Let's Encrypt) and is the only service
+# reachable from the internet. Postgres, pgAdmin, core, and frontend are only reachable over
+# the internal compose network (pgAdmin is also bound to loopback for optional SSH-tunnel access).
+#
+# Before first run:
+#   1. Point DNS A/AAAA records for your-domain.com, www.your-domain.com, and
+#      api.your-domain.com at this server's IP.
+#   2. Copy .env.production.example to .env and fill in real secrets (JWT_SECRET,
+#      POSTGRES_PASSWORD, PGADMIN_DEFAULT_PASSWORD, DOMAIN, ACME_EMAIL, etc).
+#   3. docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+services:
+  postgres:
+    image: postgres:16
+    container_name: bgsale-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in your .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in your .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file}
+    # No ports published at all: only reachable from other containers on the compose
+    # network. For interactive access use `docker compose -f docker-compose.prod.yml
+    # exec postgres psql -U <user> -d <db>`, or an SSH tunnel if you need a GUI client.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dbadmin:
+    image: dpage/pgadmin4:latest
+    container_name: bgsale-dbadmin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:?Set PGADMIN_DEFAULT_EMAIL in your .env file}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?Set PGADMIN_DEFAULT_PASSWORD in your .env file}
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "True"
+      PGADMIN_CONFIG_LOGIN_BANNER: "'BG Sale DB Admin'"
+    ports:
+      # Loopback only. Reach it from your machine via:
+      #   ssh -L 5050:localhost:5050 user@your-server
+      # then browse http://localhost:5050 locally.
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  core:
+    build:
+      context: .
+      dockerfile: services/backend/server/Dockerfile
+    container_name: bgsale-core
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DEBUG: ${APP_DEBUG:-false}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your .env file (e.g. openssl rand -base64 48)}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      REFRESH_TOKEN_REMEMBER_DAYS: ${REFRESH_TOKEN_REMEMBER_DAYS:-30}
+      REFRESH_TOKEN_SESSION_HOURS: ${REFRESH_TOKEN_SESSION_HOURS:-8}
+      SESSION_IDLE_TIMEOUT_MINUTES: ${SESSION_IDLE_TIMEOUT_MINUTES:-30}
+      ALLOW_PUBLIC_REGISTRATION: ${ALLOW_PUBLIC_REGISTRATION:-false}
+      AUTO_CREATE_TABLES: ${AUTO_CREATE_TABLES:-false}
+      ENFORCE_HTTPS: ${ENFORCE_HTTPS:-true}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:?Set TRUSTED_HOSTS in your .env file, e.g. your-domain.com,www.your-domain.com,api.your-domain.com}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS in your .env file, e.g. https://your-domain.com,https://www.your-domain.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      INVENTORY_ALERT_EMAIL: ${INVENTORY_ALERT_EMAIL:-}
+      PRODUCT_UPLOAD_DIR: /app/uploads
+    # No ports published: only reachable from the Caddy container over the compose network.
+    volumes:
+      - product_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:?Set VITE_API_BASE in your .env file, e.g. https://api.your-domain.com}
+    container_name: bgsale-frontend
+    restart: unless-stopped
+    depends_on:
+      core:
+        condition: service_healthy
+    # No ports published: only reachable from the Caddy container over the compose network.
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: bgsale-caddy
+    restart: unless-stopped
+    depends_on:
+      core:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in your .env file, e.g. your-domain.com}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in your .env file for Let's Encrypt notifications}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  product_uploads:
+  caddy_data:
+  caddy_config:

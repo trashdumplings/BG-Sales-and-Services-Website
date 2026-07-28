@@ -4,6 +4,7 @@ import PrivateRoute from './utils/PrivateRoute'
 import ScrollProgress from './components/common/ScrollProgress'
 import BackToTop from './components/common/BackToTop'
 import SmoothScroll from './components/common/SmoothScroll'
+import { SystemFeedbackProvider } from './components/common/SystemFeedback/SystemFeedback'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./views/home/Index'))
@@ -45,7 +46,8 @@ const LoadingFallback = () => (
 
 const App = () => {
   return (
-    <SmoothScroll>
+    <SystemFeedbackProvider>
+      <SmoothScroll>
       <BrowserRouter>
         <ScrollProgress />
         <Suspense fallback={<LoadingFallback />}>
@@ -60,7 +62,6 @@ const App = () => {
           <Route path='/portal' element={<Portal />} />
           <Route path='/dashboard' element={<PrivateRoute />}>
             <Route path='superadmin' element={<AdminDashboard />} />
-            <Route path='admin' element={<AdminDashboard />} />
             <Route path='hr' element={<HRDashboard />} />
             <Route path='employee' element={<EmployeeDashboard />} />
             
@@ -83,7 +84,8 @@ const App = () => {
       </Suspense>
         <BackToTop />
       </BrowserRouter>
-    </SmoothScroll>
+      </SmoothScroll>
+    </SystemFeedbackProvider>
   )
 }
 

@@ -40,6 +40,9 @@
 .dashboard-table__scroll {
   position: relative;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dashboard-table table {
@@ -123,5 +126,13 @@
   .dashboard-table thead th,
   .dashboard-table tbody td {
     padding: 14px 16px;
+  }
+
+  .dashboard-table {
+    margin-top: 16px;
+  }
+
+  .dashboard-table__scroll {
+    padding-bottom: 4px;
   }
 }

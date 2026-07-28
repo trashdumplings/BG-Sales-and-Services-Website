@@ -5,7 +5,7 @@ import {
   useReducedMotion,
   useScroll,
   useTransform,
-} from 'framer-motion'
+} from 'motion/react'
 import officeImage from '../../../assets/landing-bhutan/philosophy-workplace-no-people.jpg'
 import connectImage from '../../../assets/landing-bhutan/philosophy-connect-no-people.jpg'
 import securityImage from '../../../assets/landing-bhutan/philosophy-security-no-people.jpg'

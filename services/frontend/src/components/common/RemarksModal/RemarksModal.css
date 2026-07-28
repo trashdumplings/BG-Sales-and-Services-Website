@@ -1,0 +1,51 @@
+.remarks-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.remarks-modal__summary {
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.remarks-modal__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--body-text);
+}
+
+.remarks-modal__textarea {
+  width: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-bg);
+  color: var(--body-text);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 96px;
+}
+
+.remarks-modal__textarea:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 1px;
+}
+
+.remarks-modal__error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--status-danger);
+}
+
+.remarks-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  padding-top: var(--space-xs);
+}

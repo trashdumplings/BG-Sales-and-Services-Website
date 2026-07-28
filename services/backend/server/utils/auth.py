@@ -53,6 +53,15 @@ def get_password_hash(password: str) -> str:
             return hashed.decode('utf-8')
         raise
 
+def users_with_default_passwords(users) -> list[str]:
+    known_defaults = ("superadmin123", "hr123", "emp123", "admin123")
+    return [
+        user.email
+        for user in users
+        if user.is_active
+        and any(verify_password(password, user.password_hash) for password in known_defaults)
+    ]
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -179,14 +188,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 def is_admin_or_superadmin(user: User) -> bool:
-    return user.role in [UserRole.admin, UserRole.superadmin]
+    return user.role == UserRole.superadmin
 
 def is_superadmin(user: User) -> bool:
     return user.role == UserRole.superadmin
 
 def require_admin_or_superadmin(current_user: User = Depends(get_current_user)):
     if not is_admin_or_superadmin(current_user):
-        raise HTTPException(status_code=403, detail="Only Admin and SuperAdmin can perform this action")
+        raise HTTPException(status_code=403, detail="Only SuperAdmin can perform this action")
     return current_user
 
 def require_superadmin(current_user: User = Depends(get_current_user)):
@@ -195,9 +204,23 @@ def require_superadmin(current_user: User = Depends(get_current_user)):
     return current_user
 
 def require_hr_or_admin(current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.superadmin, UserRole.admin, UserRole.hr]:
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can perform this action")
+    if current_user.role not in [UserRole.superadmin, UserRole.hr]:
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can perform this action")
     return current_user
+
+def has_module_permission(user: User, permission: str) -> bool:
+    if user.role in [UserRole.superadmin, UserRole.admin]:
+        return True
+    if permission in {"reports", "employees"} and user.role == UserRole.hr:
+        return True
+    return permission in (user.module_permissions or [])
+
+def require_module_permission(permission: str):
+    def dependency(current_user: User = Depends(get_current_user)):
+        if not has_module_permission(current_user, permission):
+            raise HTTPException(status_code=403, detail=f"You do not have access to the {permission} module")
+        return current_user
+    return dependency
 
 def set_refresh_cookie(response: Response, token: str, max_age: Optional[int] = None):
     response.set_cookie(

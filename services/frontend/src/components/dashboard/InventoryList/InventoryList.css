@@ -73,8 +73,8 @@
   color: var(--body-text);
   transition: all 0.2s;
 }
-.cms-btn.publish:focus-visible { background: #10b981; color: white; border-color: #10b981; }
-.cms-btn.unpublish:focus-visible { background: #f59e0b; color: white; border-color: #f59e0b; }
+.cms-btn.publish:focus-visible { background: var(--status-success); color: white; border-color: var(--status-success); }
+.cms-btn.unpublish:focus-visible { background: var(--status-warning); color: white; border-color: var(--status-warning); }
 
 .qty-btn {
   width: 28px;

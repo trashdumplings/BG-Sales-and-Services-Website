@@ -107,14 +107,53 @@ export async function apiRevokeSession(token, sessionId) {
   if (!res.ok) throw new Error('Failed to revoke session');
 }
 
-export async function apiRegister(name, email, password, role = 'employee') {
+export async function apiProfile(token) {
+  const res = await fetch(`${API_BASE}/api/profile/me`, {
+    headers: getAuthHeaders(token),
+    credentials: 'include'
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to load your profile'));
+  }
+  return res.json();
+}
+
+export async function apiUpdateProfile(token, profile) {
+  const res = await fetch(`${API_BASE}/api/profile/me`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify(profile)
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to update your profile'));
+  }
+  return res.json();
+}
+
+export async function apiChangePassword(token, passwords) {
+  const res = await fetch(`${API_BASE}/auth/change-password`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    credentials: 'include',
+    body: JSON.stringify(passwords)
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to change password'));
+  }
+}
+
+export async function apiRegister(name, email, password) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({ name, email, password, role })
+    body: JSON.stringify({ name, email, password })
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ...db import get_db
 from ...models import User, UserRole
 from ...services.reports import get_inventory_alerts_data, get_monthly_summary_data
-from ...utils.auth import get_current_user
+from ...utils.auth import get_current_user, has_module_permission
 
 router = APIRouter(
     prefix="/api/reports",
@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 def verify_admin_or_hr(user: User):
-    if user.role not in [UserRole.superadmin, UserRole.admin, UserRole.hr]:
+    if not has_module_permission(user, "reports"):
         raise HTTPException(status_code=403, detail="Not enough permissions to view reports")
     return user
 
@@ -39,4 +39,3 @@ def get_inventory_alerts(
 ):
     verify_admin_or_hr(current_user)
     return get_inventory_alerts_data(db=db)
-

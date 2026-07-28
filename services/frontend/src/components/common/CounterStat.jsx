@@ -7,6 +7,7 @@ const CounterStat = ({ value, label }) => {
   const hasAnimated = useRef(false);
 
   useEffect(() => {
+    const observedNode = ref.current;
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && !hasAnimated.current) {
         hasAnimated.current = true;
@@ -27,12 +28,12 @@ const CounterStat = ({ value, label }) => {
       }
     }, { threshold: 0.5 });
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    if (observedNode) {
+      observer.observe(observedNode);
     }
 
     return () => {
-      if (ref.current) observer.unobserve(ref.current);
+      if (observedNode) observer.unobserve(observedNode);
     };
   }, [value]);
 

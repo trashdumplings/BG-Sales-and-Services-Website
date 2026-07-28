@@ -55,8 +55,8 @@ def get_work_logs(
     """Get work logs with filtering. Employees see their own; Admins/HR see all."""
     query = db.query(WorkLog)
     
-    # If not admin/hr, restrict to own logs
-    if current_user.role not in [UserRole.admin, UserRole.superadmin, UserRole.hr]:
+    # If not SuperAdmin/HR, restrict to own logs
+    if current_user.role not in [UserRole.superadmin, UserRole.hr]:
         employee = db.query(Employee).filter(Employee.email == current_user.email.lower()).first()
         if not employee:
             return []
@@ -114,12 +114,12 @@ def delete_work_log(log_id: int, db: Session = Depends(get_db), current_user: Us
     if not work_log:
         raise HTTPException(status_code=404, detail="Work log not found")
     
-    # Check ownership or admin
+    # Check ownership or SuperAdmin
     employee = db.query(Employee).filter(Employee.email == current_user.email.lower()).first()
-    if (not employee or work_log.employee_id != employee.id) and current_user.role not in [UserRole.admin, UserRole.superadmin]:
+    if (not employee or work_log.employee_id != employee.id) and current_user.role != UserRole.superadmin:
         raise HTTPException(status_code=403, detail="Not authorized to delete this log")
         
-    if work_log.is_approved and current_user.role not in [UserRole.admin, UserRole.superadmin]:
+    if work_log.is_approved and current_user.role != UserRole.superadmin:
         raise HTTPException(status_code=400, detail="Cannot delete an approved work log")
         
     db.delete(work_log)

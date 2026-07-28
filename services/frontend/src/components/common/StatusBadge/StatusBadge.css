@@ -1,0 +1,35 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-badge--neutral {
+  background: color-mix(in srgb, var(--brand-slate) 14%, transparent);
+  color: var(--brand-slate);
+}
+
+.status-badge--info {
+  background: color-mix(in srgb, var(--status-info) 14%, transparent);
+  color: var(--status-info);
+}
+
+.status-badge--success {
+  background: color-mix(in srgb, var(--status-success) 14%, transparent);
+  color: var(--status-success);
+}
+
+.status-badge--warning {
+  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+  color: var(--status-warning);
+}
+
+.status-badge--danger {
+  background: color-mix(in srgb, var(--status-danger) 14%, transparent);
+  color: var(--status-danger);
+}

@@ -33,14 +33,16 @@ const AuditLogs = () => {
   );
 
   if (loading) return <div className="loading-state">Loading audit logs...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
 
   return (
     <div className="audit-logs-container">
       <div className="list-controls">
         <div className="search-box">
           <LuSearch className="search-icon" />
-          <input 
-            type="text" 
+          <input
+            aria-label="Search audit logs"
+            type="text"
             placeholder="Search logs..." 
             value={filter}
             onChange={(e) => setFilter(e.target.value)}

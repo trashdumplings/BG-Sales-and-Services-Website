@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from enum import Enum
 from typing import Optional
-from sqlalchemy import String, Enum as SAEnum, DateTime, func, Integer, Text, Numeric, ForeignKey, Boolean, Date, JSON
+from sqlalchemy import String, Enum as SAEnum, DateTime, func, Integer, Text, Numeric, ForeignKey, Boolean, Date, JSON, text
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -21,6 +21,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(SAEnum(UserRole), default=UserRole.employee)
+    module_permissions: Mapped[list] = mapped_column(
+        JSON, default=list, nullable=False, server_default=text("'[]'::json")
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -76,8 +79,10 @@ class InventoryItem(Base):
     supplier: Mapped[Optional[str]] = mapped_column(String(255))
     location: Mapped[Optional[str]] = mapped_column(String(255))  # Warehouse location
     status: Mapped[str] = mapped_column(String(20), default="available")  # available, low_stock, out_of_stock
-    cms_status: Mapped[str] = mapped_column(String(20), default="draft")  # draft, published
-    version: Mapped[int] = mapped_column(Integer, default=1)
+    cms_status: Mapped[str] = mapped_column(
+        String(20), default="draft", server_default=text("'draft'")
+    )  # draft, published
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default=text("1"))
     reorder_level: Mapped[int] = mapped_column(Integer, default=10)  # Alert when stock falls below this
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -251,7 +256,9 @@ class WorkLog(Base):
     description: Mapped[Optional[str]] = mapped_column(Text)
     challenges_faced: Mapped[Optional[str]] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="in_progress")  # in_progress, completed
-    workflow_status: Mapped[str] = mapped_column(String(20), default="draft", index=True)  # draft, submitted, approved, rejected
+    workflow_status: Mapped[str] = mapped_column(
+        String(20), default="draft", server_default=text("'draft'"), index=True
+    )  # draft, submitted, approved, rejected
     submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
     reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
     reviewed_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True)

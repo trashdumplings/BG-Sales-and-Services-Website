@@ -21,6 +21,7 @@ import {
   updateCatalogProduct,
 } from '../../../utils/api'
 import DashboardTable from '../../common/DashboardTable/DashboardTable'
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback'
 import './ProductManager.css'
 
 const emptyForm = {
@@ -107,6 +108,7 @@ const toPayload = (form) => ({
 })
 
 export default function ProductManager() {
+  const { confirm } = useSystemFeedback()
   const { token } = useAuth()
   const [products, setProducts] = useState([])
   const [form, setForm] = useState(emptyForm)
@@ -325,7 +327,12 @@ export default function ProductManager() {
   }
 
   const handleDelete = async (product) => {
-    if (!window.confirm(`Delete "${product.title}"? This cannot be undone.`)) return
+    const confirmed = await confirm({
+      title: 'Delete product?',
+      message: `"${product.title}" will be permanently removed from the catalog. This cannot be undone.`,
+      confirmLabel: 'Delete product',
+    })
+    if (!confirmed) return
     setError('')
     try {
       await deleteCatalogProduct(token, product.id)
@@ -376,7 +383,7 @@ export default function ProductManager() {
         <div className="product-manager__toolbar">
           <div className="product-manager__search">
             <LuSearch />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, brands, SKU..." />
+            <input aria-label="Search product catalog" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, brands, SKU..." />
           </div>
           <span>{filteredProducts.length} product{filteredProducts.length === 1 ? '' : 's'}</span>
         </div>
@@ -397,7 +404,7 @@ export default function ProductManager() {
                   return (
                     <div className="product-manager__product">
                       <div className="product-manager__thumb">
-                        {product.image_url ? <img src={product.image_url} alt="" /> : <LuBox />}
+                        {product.image_url ? <img src={product.image_url} alt={`${product.title} product`} /> : <LuBox aria-hidden="true" />}
                       </div>
                       <div>
                         <strong>{product.title}</strong>
@@ -421,6 +428,7 @@ export default function ProductManager() {
                     <button
                       type="button"
                       className={`product-manager__visibility ${product.is_published ? 'is-live' : ''}`}
+                      aria-label={`${product.is_published ? 'Unpublish' : 'Publish'} ${product.title}`}
                       onClick={() => togglePublished(product)}
                     >
                       {product.is_published ? <LuEye /> : <LuEyeOff />}

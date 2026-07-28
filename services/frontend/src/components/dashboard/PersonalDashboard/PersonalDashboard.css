@@ -1,13 +1,10 @@
-:root {
-  --primary-color: #3b82f6;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
+.personal-dash-container {
+  --primary-color: var(--brand-blue);
+  --success-color: var(--status-success);
+  --warning-color: var(--status-warning);
+  --danger-color: var(--status-danger);
   --card-bg: var(--surface-bg);
   --glass-border: 1px solid var(--border-color);
-}
-
-.personal-dash-container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -39,7 +36,7 @@
 .user-avatar-large {
   width: 80px;
   height: 80px;
-  background: linear-gradient(45deg, var(--primary-color), #2563eb);
+  background: linear-gradient(45deg, var(--primary-color), var(--brand-blue-deep));
   border-radius: 2rem;
   display: flex;
   align-items: center;

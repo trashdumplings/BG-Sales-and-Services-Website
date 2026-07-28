@@ -11,6 +11,7 @@ __pycache__/
 .env.*
 !.env.example
 !.env.docker.example
+!.env.production.example
 !services/backend/server/env.example
 services/backend/server/.env
 services/backend/venv/

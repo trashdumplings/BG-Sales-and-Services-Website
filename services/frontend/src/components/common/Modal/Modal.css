@@ -1,0 +1,107 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.modal-panel {
+  width: 100%;
+  max-height: min(88vh, 820px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+}
+
+.modal-panel--sm { max-width: 420px; }
+.modal-panel--md { max-width: 620px; }
+.modal-panel--lg { max-width: 880px; }
+
+.modal-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-panel__header h2 {
+  margin: 0;
+  font-size: var(--h6-size);
+  color: var(--body-text);
+}
+
+.modal-panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.modal-panel__close:hover,
+.modal-panel__close:focus-visible {
+  background: var(--surface-muted);
+  color: var(--body-text);
+}
+
+.modal-panel__body {
+  padding: var(--space-xl);
+  overflow-y: auto;
+}
+
+.modal-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-panel {
+    max-height: 94dvh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .modal-panel__header,
+  .modal-panel__body,
+  .modal-panel__footer {
+    padding: var(--space-md);
+  }
+
+  .modal-panel__close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .modal-panel__footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-panel__footer .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+}
