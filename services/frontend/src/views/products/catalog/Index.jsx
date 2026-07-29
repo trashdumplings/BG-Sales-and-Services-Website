@@ -178,6 +178,17 @@ const Products = ({ products = [] }) => {
 
   const activeCategoryLabel =
     productCategories.find((item) => item.slug === activeCategory)?.label ?? 'All Products'
+  const groupedProducts = useMemo(
+    () =>
+      productCategories
+        .filter((item) => item.slug !== 'all')
+        .map((item) => ({
+          ...item,
+          products: filteredProducts.filter((product) => product.category === item.slug),
+        }))
+        .filter((item) => item.products.length > 0),
+    [filteredProducts, productCategories],
+  )
   const selectedQuoteProduct = products.find((product) => product.slug === quoteProduct)
   const basketCount = quoteItems.reduce((total, item) => total + item.quantity, 0)
   const basketTotal = quoteItems.reduce(
@@ -485,40 +496,67 @@ const Products = ({ products = [] }) => {
         <div className="catalog-main">
           <div className="products-section__heading">
             <div>
-              <p className="section-eyebrow">All products</p>
-              <h2>{activeCategoryLabel}</h2>
+              <p className="section-eyebrow">
+                {activeCategory === 'all' ? 'Browse the catalog' : 'Selected category'}
+              </p>
+              <h2>{activeCategory === 'all' ? 'Products by category' : activeCategoryLabel}</h2>
             </div>
             <p>
-              Store-style browsing for featured products, team procurement, and quotation-based sales.
+              {activeCategory === 'all'
+                ? 'Each product is organized under its category for quicker comparison and procurement.'
+                : `Browse all ${activeCategoryLabel.toLowerCase()} matching your current filters.`}
             </p>
           </div>
 
-          <motion.div
-            className="products-grid"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <Card
-                    product={product}
-                    onAddToQuote={addToQuote}
-                    onOpenQuote={() => setIsQuoteOpen(true)}
-                    isAdded={quoteItems.some((item) => item.product.slug === product.slug)}
-                  />
-                </motion.div>
-              ))
-            ) : (
-              <div className="no-products">
-                <p>No products found matching your filters.</p>
-                <button type="button" onClick={resetFilters}>
-                  Reset filters
-                </button>
-              </div>
-            )}
-          </motion.div>
+          {groupedProducts.length > 0 ? (
+            <div className="product-category-groups">
+              {groupedProducts.map((group) => (
+                <section
+                  className="product-category-group"
+                  id={`catalog-${group.slug}`}
+                  key={group.slug}
+                  aria-labelledby={`catalog-${group.slug}-heading`}
+                >
+                  <div className="product-category-group__heading">
+                    <div>
+                      <span>{group.products.length} {group.products.length === 1 ? 'item' : 'items'}</span>
+                      <h3 id={`catalog-${group.slug}-heading`}>{group.label}</h3>
+                    </div>
+                    {activeCategory === 'all' ? (
+                      <Link to={`/products/${group.slug}`}>
+                        View {group.label} <FiArrowUpRight />
+                      </Link>
+                    ) : null}
+                  </div>
+
+                  <motion.div
+                    className="products-grid"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {group.products.map((product) => (
+                      <motion.div key={product.id} variants={itemVariants}>
+                        <Card
+                          product={product}
+                          onAddToQuote={addToQuote}
+                          onOpenQuote={() => setIsQuoteOpen(true)}
+                          isAdded={quoteItems.some((item) => item.product.slug === product.slug)}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="no-products">
+              <p>No products found matching your filters.</p>
+              <button type="button" onClick={resetFilters}>
+                Reset filters
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
