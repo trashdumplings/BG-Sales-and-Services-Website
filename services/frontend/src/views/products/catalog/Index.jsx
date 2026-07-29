@@ -550,6 +550,11 @@ const Products = ({ products = [] }) => {
         </div>
 
         <form className="quote-flow__form" onSubmit={(event) => event.preventDefault()}>
+          <div className="quote-form__heading">
+            <span>Inquiry details</span>
+            <p>Choose a product or send a general request. We will confirm availability and pricing.</p>
+          </div>
+
           <div className="quote-basket">
             <span>Basket items</span>
             {quoteItems.length > 0 ? (
@@ -561,7 +566,11 @@ const Products = ({ products = [] }) => {
                       <strong>{item.product.title}</strong>
                       <small>{item.quantity} x {formatCurrency(item.product.price)}</small>
                     </div>
-                    <button type="button" onClick={() => removeFromQuote(item.product.slug)}>
+                    <button
+                      type="button"
+                      onClick={() => removeFromQuote(item.product.slug)}
+                      aria-label={`Remove ${item.product.title} from quote basket`}
+                    >
                       <FiTrash2 />
                     </button>
                   </li>
@@ -572,9 +581,13 @@ const Products = ({ products = [] }) => {
             )}
           </div>
 
-          <label>
-            Add single product
-            <select value={quoteProduct} onChange={(event) => setQuoteProduct(event.target.value)}>
+          <label className="quote-field">
+            <span>Add a product</span>
+            <select
+              value={quoteProduct}
+              onChange={(event) => setQuoteProduct(event.target.value)}
+              aria-describedby="quote-product-help"
+            >
               <option value="">General product inquiry</option>
               {products.map((product) => (
                 <option key={product.slug} value={product.slug}>
@@ -582,30 +595,33 @@ const Products = ({ products = [] }) => {
                 </option>
               ))}
             </select>
+            <small id="quote-product-help">Optional if products are already in your basket.</small>
           </label>
 
-          <label>
-            Quantity for single product
+          <label className="quote-field">
+            <span>Quantity</span>
             <input
               type="number"
               min="1"
+              inputMode="numeric"
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
             />
           </label>
 
-          <label>
-            Email or phone
+          <label className="quote-field quote-field--full">
+            <span>Email or phone</span>
             <input
               type="text"
               placeholder="Where should we reply?"
+              autoComplete="email"
               value={buyerContact}
               onChange={(event) => setBuyerContact(event.target.value)}
             />
           </label>
 
-          <label>
-            Notes
+          <label className="quote-field quote-field--full">
+            <span>Project notes</span>
             <textarea
               rows="4"
               placeholder="Mention delivery, installation, preferred brand, or project requirements."
@@ -617,7 +633,9 @@ const Products = ({ products = [] }) => {
           <a className="quote-flow__submit" href={quoteMailto}>
             Prepare inquiry <FiArrowUpRight />
           </a>
-          <small>Online submission will replace this mail flow once the backend endpoint is ready.</small>
+          <small className="quote-flow__mail-note">
+            This opens your email app with the inquiry details prepared for review.
+          </small>
         </form>
       </section>
 
