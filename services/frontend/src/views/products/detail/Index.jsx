@@ -9,6 +9,9 @@ import {
   FiMail,
   FiPackage,
   FiSearch,
+  FiShield,
+  FiTool,
+  FiTruck,
 } from 'react-icons/fi'
 import logo from '../../../assets/logo.png'
 import products, { getProductBySlug } from '../../../stores/Data'
@@ -88,6 +91,10 @@ export default function ProductDetail() {
   )}&body=${encodeURIComponent(
     `Product: ${product.title}\nQuantity:\nDelivery location:\nInstallation/support required:\nContact:`,
   )}`
+  const discountPercent =
+    product.previousPrice && product.previousPrice > product.price
+      ? Math.round(((product.previousPrice - product.price) / product.previousPrice) * 100)
+      : 0
 
   return (
     <div className="product-detail-page">
@@ -129,7 +136,7 @@ export default function ProductDetail() {
         <section className="product-detail-hero">
           <div className="product-detail-media">
             <img src={product.image} alt={product.title} />
-            <span className="product-detail-media__note">Product image</span>
+            <span className="product-detail-media__note">Product imagery may vary by configuration</span>
           </div>
 
           <div className="product-detail-content">
@@ -142,9 +149,17 @@ export default function ProductDetail() {
             <div className="product-detail-pricing">
               <strong>{formatCurrency(product.price)}</strong>
               {product.previousPrice ? <span>{formatCurrency(product.previousPrice)}</span> : null}
+              {discountPercent > 0 ? (
+                <em aria-label={`${discountPercent} percent below previous price`}>
+                  Save {discountPercent}%
+                </em>
+              ) : null}
             </div>
 
-            <div className="product-detail-availability">
+            <div
+              className={`product-detail-availability ${product.stock > 0 ? 'is-available' : 'is-unavailable'}`}
+              role="status"
+            >
               <FiCheckCircle />
               <span>
                 {product.stock > 0
@@ -154,7 +169,10 @@ export default function ProductDetail() {
             </div>
 
             <div className="product-detail-facts">
-              <h2>Product details</h2>
+              <div className="product-detail-facts__heading">
+                <h2>Key specifications</h2>
+                <span>{displayedSpecs.length} highlights</span>
+              </div>
               <ul>
                 {displayedSpecs.map((spec) => (
                   <li key={spec}>
@@ -164,15 +182,32 @@ export default function ProductDetail() {
               </ul>
             </div>
 
+            <div className="product-detail-assurances" aria-label="Purchasing support">
+              <div>
+                <FiShield />
+                <span><strong>Verified sourcing</strong>Official quotation</span>
+              </div>
+              <div>
+                <FiTruck />
+                <span><strong>Bhutan delivery</strong>Coordinated locally</span>
+              </div>
+              <div>
+                <FiTool />
+                <span><strong>Deployment</strong>Support available</span>
+              </div>
+            </div>
+
             <div className="product-detail-actions">
               <a className="product-detail-btn primary" href={quoteHref}>
-                <FiFileText /> Request Quote
+                <FiFileText /> Request a quote
               </a>
               <a className="product-detail-btn secondary" href="mailto:bgsales@outlook.com">
                 <FiMail /> Contact sales
               </a>
             </div>
-            <p className="product-detail-response-note">Our sales team usually responds within one business day.</p>
+            <p className="product-detail-response-note">
+              No commitment required. Our sales team usually responds within one business day.
+            </p>
             <Link className="product-detail-category-link" to={`/products/${product.category}`}>
               Browse more {product.categoryLabel} <FiArrowUpRight />
             </Link>
