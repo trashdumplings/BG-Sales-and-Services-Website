@@ -9,6 +9,7 @@ import {
   LuShieldCheck,
   LuShoppingBag,
   LuChartNoAxesCombined,
+  LuClipboardList,
   LuUserCheck,
   LuUserPlus,
   LuUsers,
@@ -21,6 +22,7 @@ import './UserManagement.css';
 const PAGE_SIZE = 10;
 
 const permissionOptions = [
+  { id: 'documents', label: 'Documents', description: 'Create and print bills, orders, and proforma invoices.', icon: LuClipboardList },
   { id: 'products', label: 'Products', description: 'Manage the public product catalog.', icon: LuShoppingBag },
   { id: 'reports', label: 'Reports', description: 'View operational reports and insights.', icon: LuChartNoAxesCombined },
 ];

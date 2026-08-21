@@ -71,7 +71,8 @@ services:
       INVENTORY_ALERT_EMAIL: ${INVENTORY_ALERT_EMAIL:-}
       PRODUCT_UPLOAD_DIR: /app/uploads
     ports:
-      - "${CORE_PORT:-8000}:8000"
+      # Development API is local-only. Production exposes it exclusively through Caddy.
+      - "127.0.0.1:${CORE_PORT:-8000}:8000"
     volumes:
       - product_uploads:/app/uploads
     healthcheck:
@@ -86,6 +87,7 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8000}
+        VITE_ALLOW_PUBLIC_REGISTRATION: ${VITE_ALLOW_PUBLIC_REGISTRATION:-true}
     container_name: bgsale-frontend
     restart: unless-stopped
     depends_on:

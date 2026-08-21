@@ -157,14 +157,12 @@ export default function ProductDetail() {
             </div>
 
             <div
-              className={`product-detail-availability ${product.stock > 0 ? 'is-available' : 'is-unavailable'}`}
+              className={`product-detail-availability ${product.inStock ? 'is-available' : 'is-unavailable'}`}
               role="status"
             >
               <FiCheckCircle />
               <span>
-                {product.stock > 0
-                  ? `${product.stock} units currently available`
-                  : 'Currently unavailable'}
+                {product.inStock ? 'Currently available' : 'Currently unavailable'}
               </span>
             </div>
 

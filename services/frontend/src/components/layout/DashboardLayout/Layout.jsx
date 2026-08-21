@@ -17,6 +17,7 @@ import {
   LuUser,
   LuUsers,
   LuX,
+  LuFileText,
 } from 'react-icons/lu';
 import { FiBarChart2 } from 'react-icons/fi';
 import './layout.css';
@@ -94,6 +95,7 @@ export default function Layout({ children }) {
     { name: 'Leave', path: role === 'employee' ? '/dashboard/leave/my' : '/dashboard/leave', icon: LuCalendarDays, roles: ['employee', 'hr', 'superadmin'] },
     { name: 'Products', path: '/dashboard/products', icon: LuShoppingBag, roles: ['employee', 'hr', 'superadmin'], permission: 'products' },
     { name: 'Reports', path: '/dashboard/reports', icon: FiBarChart2, roles: ['employee', 'hr', 'superadmin'], permission: 'reports' },
+    { name: 'Documents', path: '/dashboard/documents', icon: LuFileText, roles: ['employee', 'hr', 'superadmin'], permission: 'documents' },
   ];
 
   const defaultRolePermission = (permission) => role === 'hr' && permission === 'reports';

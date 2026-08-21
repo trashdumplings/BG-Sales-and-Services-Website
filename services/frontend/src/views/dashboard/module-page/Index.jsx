@@ -11,6 +11,7 @@ import WorkLogs from '../../../components/dashboard/WorkLogs/WorkLogs';
 import UserManagement from '../../../components/dashboard/UserManagement/UserManagement';
 import SystemReports from '../../../components/dashboard/SystemReports/SystemReports';
 import ProductManager from '../../../components/dashboard/ProductManager/ProductManager';
+import DocumentManager from '../../../components/dashboard/DocumentManager/DocumentManager';
 
 const ModulePage = ({ title, icon: Icon }) => {
   const { user } = useAuth();
@@ -55,6 +56,7 @@ const ModulePage = ({ title, icon: Icon }) => {
     if (title === "System Reports") {
       return <SystemReports />;
     }
+    if (title === "Business Documents") return <DocumentManager />;
 
     return (
       <>

@@ -1,5 +1,5 @@
 from ..modules import admin, auth, employees, leave, profile
-from .routes import inventory, products, reports, work_logs
+from .routes import documents, inventory, products, reports, work_logs
 
 routers = [
     auth.router,
@@ -11,4 +11,5 @@ routers = [
     profile.router,
     reports.router,
     products.router,
+    documents.router,
 ]

@@ -1,9 +1,36 @@
 from datetime import datetime, date
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from .models import UserRole
 
 # Auth schemas
+COMMON_PASSWORD_MARKERS = {
+    "password", "passw0rd", "qwerty", "letmein", "welcome", "admin",
+    "superadmin", "changeme", "whatever", "company", "123456", "12345678",
+}
+
+
+def validate_strong_password(value: str) -> str:
+    if not 12 <= len(value) <= 128:
+        raise ValueError("Password must be between 12 and 128 characters")
+    classes = (
+        any(char.islower() for char in value),
+        any(char.isupper() for char in value),
+        any(char.isdigit() for char in value),
+        any(not char.isalnum() for char in value),
+    )
+    if sum(classes) < 3:
+        raise ValueError("Password must use at least three of: lowercase, uppercase, number, symbol")
+    normalized = "".join(char for char in value.lower() if char.isalnum())
+    if any(
+        normalized == marker
+        or (normalized.startswith(marker) and len(normalized) <= len(marker) + 6)
+        for marker in COMMON_PASSWORD_MARKERS
+    ):
+        raise ValueError("Password is too common or predictable")
+    return value
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -43,9 +70,28 @@ class UserOut(BaseModel):
         from_attributes = True
 
 class RegisterIn(BaseModel):
-    name: str
+    name: str = Field(min_length=2, max_length=120)
     email: EmailStr
-    password: str
+    password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
+
+    @model_validator(mode="after")
+    def reject_personal_password(self):
+        normalized_password = "".join(char for char in self.password.lower() if char.isalnum())
+        personal_tokens = [self.email.split("@", 1)[0], *self.name.split()]
+        for token in personal_tokens:
+            normalized_token = "".join(char for char in token.lower() if char.isalnum())
+            if len(normalized_token) >= 4 and normalized_token in normalized_password:
+                raise ValueError("Password must not contain your name or email")
+        return self
+
+
+class RegistrationAccepted(BaseModel):
+    message: str
 
 class PasswordChange(BaseModel):
     current_password: str = Field(min_length=1, max_length=128)
@@ -54,15 +100,7 @@ class PasswordChange(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_password_strength(cls, value: str) -> str:
-        classes = (
-            any(char.islower() for char in value),
-            any(char.isupper() for char in value),
-            any(char.isdigit() for char in value),
-            any(not char.isalnum() for char in value),
-        )
-        if sum(classes) < 3:
-            raise ValueError("Password must use at least three of: lowercase, uppercase, number, symbol")
-        return value
+        return validate_strong_password(value)
 
 class ProfileUpdate(BaseModel):
     name: str = Field(min_length=2, max_length=120)
@@ -172,6 +210,18 @@ class InventoryAdjust(BaseModel):
     quantity_change: int  # Positive to add, negative to subtract
 
 # Website product catalog schemas
+class ProductCategoryCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+
+class ProductCategoryOut(BaseModel):
+    id: int
+    slug: str
+    name: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class CatalogProductCreate(BaseModel):
     slug: Optional[str] = None
     sku: str = Field(min_length=1, max_length=100)
@@ -222,6 +272,26 @@ class CatalogProductOut(BaseModel):
     specs: List[str]
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CatalogPublicProductOut(BaseModel):
+    """Presentation-only product data safe for anonymous catalog consumers."""
+
+    slug: str
+    title: str
+    brand: str
+    category: str
+    image_url: Optional[str]
+    previous_price: Optional[float]
+    price: float
+    in_stock: bool
+    featured: bool
+    short_description: str
+    description: str
+    specs: List[str]
 
     class Config:
         from_attributes = True
@@ -311,7 +381,12 @@ class LeaveBalanceOut(BaseModel):
 class CombinedUserCreate(BaseModel):
     name: str
     email: EmailStr
-    password: str
+    password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
     role: UserRole
     first_name: str
     last_name: str

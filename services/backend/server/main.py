@@ -43,8 +43,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=600,
 )
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="product-uploads")
@@ -79,15 +80,13 @@ for router in routers:
 @app.get("/")
 def root():
     """Root endpoint - provides API information"""
-    return {
+    response = {
         "message": settings.APP_NAME,
         "version": "0.1.0",
-        "docs": {
-            "swagger_ui": "/docs",
-            "redoc": "/redoc",
-            "openapi_json": "/openapi.json"
-        },
-        "endpoints": {
+        "health": "/health",
+    }
+    if settings.DEBUG:
+        response["endpoints"] = {
             "auth": "/auth",
             "employees": "/api/employees",
             "inventory": "/api/inventory",
@@ -95,10 +94,13 @@ def root():
             "reports": "/api/reports/monthly-summary",
             "leaves": "/api/leaves",
             "admin": "/admin",
-            "health": "/health"
-        },
-        "note": "This is an API server. Visit /docs for interactive API documentation."
-    }
+        }
+        response["docs"] = {
+            "swagger_ui": "/docs",
+            "redoc": "/redoc",
+            "openapi_json": "/openapi.json",
+        }
+    return response
 
 @app.get("/health")
 def health():

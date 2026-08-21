@@ -18,6 +18,7 @@ import {
 } from 'react-icons/lu'
 import DashboardTable from '../../common/DashboardTable/DashboardTable'
 import './SystemReports.css'
+import ReportExtractor from './ReportExtractor'
 
 const HOURS_TARGET = 160
 const employeePerformanceColumns = [
@@ -44,7 +45,7 @@ export default function SystemReports() {
   const [reportData, setReportData] = useState(null)
   const [alertsData, setAlertsData] = useState([])
 
-  const hasAccess = ['superadmin', 'hr'].includes(user?.role)
+  const hasAccess = ['superadmin', 'hr'].includes(user?.role) || (user?.module_permissions || []).includes('reports')
 
   useEffect(() => {
     if (authLoading || !token || !hasAccess) return
@@ -267,6 +268,7 @@ export default function SystemReports() {
 
   return (
     <div className="reports-shell">
+      <ReportExtractor />
       <section className="reports-hero">
         <div className="reports-hero__copy">
           <span className="reports-kicker">Operations reporting</span>

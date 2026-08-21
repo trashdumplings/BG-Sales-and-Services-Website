@@ -2,6 +2,7 @@ import os
 import secrets
 from functools import lru_cache
 from typing import List
+from urllib.parse import unquote, urlsplit
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
@@ -57,6 +58,9 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        # The project-level file also contains Compose, pgAdmin, and Vite settings.
+        # Ignore those unrelated keys while still validating every declared API setting.
+        extra = "ignore"
 
     @property
     def origins_list(self) -> List[str]:
@@ -98,6 +102,14 @@ class Settings(BaseSettings):
             raise RuntimeError("Production TRUSTED_HOSTS must contain only deployed host names.")
         if any(origin.startswith("http://") for origin in self.origins_list):
             raise RuntimeError("Production CORS_ORIGINS must use HTTPS.")
+        database_password = unquote(urlsplit(self.DATABASE_URL).password or "").strip()
+        normalized_database_password = database_password.lower()
+        weak_database_passwords = {"", "postgres", "password", "admin", "changeme", "change-me"}
+        if (
+            normalized_database_password in weak_database_passwords
+            or any(marker in normalized_database_password for marker in ("replace-with", "change-this", "example"))
+        ):
+            raise RuntimeError("Production DATABASE_URL must use a unique, non-default database password.")
 
 
 @lru_cache()

@@ -3,12 +3,19 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# Keep production image builds deterministic and avoid registry audit/funding calls
+# that can make Docker builds fail even after packages have been downloaded.
+# Vite and the React build plugin are devDependencies, so the build stage must
+# install them even when Docker/npm is invoked from a production environment.
+RUN npm ci --include=dev --no-audit --no-fund \
+    && test -x node_modules/.bin/vite
 
 COPY . .
 
 ARG VITE_API_BASE=http://localhost:8000
+ARG VITE_ALLOW_PUBLIC_REGISTRATION=false
 ENV VITE_API_BASE=${VITE_API_BASE}
+ENV VITE_ALLOW_PUBLIC_REGISTRATION=${VITE_ALLOW_PUBLIC_REGISTRATION}
 
 RUN npm run build
 

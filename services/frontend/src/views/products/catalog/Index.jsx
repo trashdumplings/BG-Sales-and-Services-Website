@@ -146,9 +146,9 @@ const Products = ({ products = [] }) => {
 
     const stockFiltered =
       stockFilter === 'available'
-        ? brandFiltered.filter((product) => product.stock > 0)
-        : stockFilter === 'low'
-          ? brandFiltered.filter((product) => product.stock > 0 && product.stock <= 5)
+        ? brandFiltered.filter((product) => product.inStock)
+        : stockFilter === 'unavailable'
+          ? brandFiltered.filter((product) => !product.inStock)
           : brandFiltered
 
     const priceFiltered = stockFiltered.filter((product) => {
@@ -450,7 +450,7 @@ const Products = ({ products = [] }) => {
                 <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
                   <option value="all">All stock</option>
                   <option value="available">In stock</option>
-                  <option value="low">Low stock</option>
+                  <option value="unavailable">Unavailable</option>
                 </select>
               </label>
 

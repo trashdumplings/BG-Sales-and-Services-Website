@@ -157,7 +157,10 @@ export async function apiRegister(name, email, password) {
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
-    throw new Error(error?.detail || 'Registration failed');
+    const message = typeof error?.detail === 'string'
+      ? error.detail
+      : error?.detail?.[0]?.msg || 'Registration failed';
+    throw new Error(message);
   }
   return res.json();
 }
@@ -573,6 +576,33 @@ export async function getCatalogProducts(token) {
   });
   if (!res.ok) throw new Error('Failed to fetch product catalog');
   return res.json();
+}
+
+export async function getProductCategories(token) {
+  const res = await fetch(`${API_BASE}/api/products/categories`, { headers: getAuthHeaders(token), credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch product categories');
+  return res.json();
+}
+
+export async function createProductCategory(token, name) {
+  const res = await fetch(`${API_BASE}/api/products/categories`, {
+    method: 'POST', headers: getAuthHeaders(token), credentials: 'include', body: JSON.stringify({ name })
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to create category'));
+  }
+  return res.json();
+}
+
+export async function deleteProductCategory(token, categoryId) {
+  const res = await fetch(`${API_BASE}/api/products/categories/${categoryId}`, {
+    method: 'DELETE', headers: getAuthHeaders(token), credentials: 'include'
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(error, 'Failed to delete category'));
+  }
 }
 
 export async function uploadCatalogProductImage(token, imageFile) {

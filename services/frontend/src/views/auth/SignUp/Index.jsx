@@ -34,8 +34,18 @@ export default function SignUp() {
       setError('Email is required');
       return false;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 12) {
+      setError('Password must be at least 12 characters');
+      return false;
+    }
+    const passwordClasses = [
+      /[a-z]/.test(formData.password),
+      /[A-Z]/.test(formData.password),
+      /\d/.test(formData.password),
+      /[^A-Za-z0-9]/.test(formData.password),
+    ].filter(Boolean).length;
+    if (passwordClasses < 3) {
+      setError('Password must include at least three of: lowercase, uppercase, number, symbol');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -63,7 +73,7 @@ export default function SignUp() {
       );
       // After successful registration, redirect to login
       navigate('/login', { 
-        state: { message: 'Registration successful! Please sign in.' } 
+        state: { message: 'If registration can be completed, you may now try signing in.' }
       });
     } catch (err) {
       setError(err.message || 'Registration failed');
@@ -117,9 +127,9 @@ export default function SignUp() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Create a password (min 6 characters)"
+              placeholder="Create a strong password (min 12 characters)"
               required
-              minLength={6}
+              minLength={12}
             />
           </div>
 

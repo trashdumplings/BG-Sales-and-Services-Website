@@ -21,8 +21,8 @@ const Card = memo(({ product, onAddToQuote, onOpenQuote, isAdded = false }) => {
       <div className="store-card__badges">
         {discountPercent > 0 && <span className="store-card__discount">-{discountPercent}%</span>}
         {product.featured && <span className="store-card__featured">Featured</span>}
-        <span className={`store-card__stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
-          {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+        <span className={`store-card__stock ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
+          {product.inStock ? 'In stock' : 'Out of stock'}
         </span>
       </div>
 

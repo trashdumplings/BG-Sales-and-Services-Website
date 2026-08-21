@@ -16,6 +16,7 @@ PRODUCTION_ENV = {
     "ENFORCE_HTTPS": "true",
     "TRUSTED_HOSTS": "example.com,api.example.com",
     "CORS_ORIGINS": "https://example.com",
+    "DATABASE_URL": "postgresql+psycopg2://bgapp:unique-test-password@postgres:5432/bgsale_portal",
 }
 
 
@@ -27,6 +28,11 @@ class ProductionConfigurationTests(unittest.TestCase):
 
     def test_secure_production_configuration_is_accepted(self):
         settings = self.settings()
+        settings.validate_production()
+
+    def test_unrelated_project_environment_keys_are_ignored(self):
+        with patch.dict("os.environ", {**PRODUCTION_ENV, "VITE_API_BASE": "https://example.com"}, clear=True):
+            settings = Settings(_env_file=None)
         settings.validate_production()
 
     def test_weak_secret_is_rejected(self):
@@ -47,6 +53,13 @@ class ProductionConfigurationTests(unittest.TestCase):
     def test_auto_create_tables_is_rejected(self):
         settings = self.settings(AUTO_CREATE_TABLES="true")
         with self.assertRaisesRegex(RuntimeError, "AUTO_CREATE_TABLES"):
+            settings.validate_production()
+
+    def test_default_database_credentials_are_rejected(self):
+        settings = self.settings(
+            DATABASE_URL="postgresql+psycopg2://postgres:postgres@postgres:5432/bgsale_portal"
+        )
+        with self.assertRaisesRegex(RuntimeError, "DATABASE_URL"):
             settings.validate_production()
 
     def test_insecure_origins_are_rejected(self):

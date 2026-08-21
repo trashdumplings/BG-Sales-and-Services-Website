@@ -95,6 +95,7 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         VITE_API_BASE: ${VITE_API_BASE:?Set VITE_API_BASE in your .env file, e.g. https://api.your-domain.com}
+        VITE_ALLOW_PUBLIC_REGISTRATION: ${VITE_ALLOW_PUBLIC_REGISTRATION:-false}
     container_name: bgsale-frontend
     restart: unless-stopped
     depends_on:

@@ -4,10 +4,20 @@
 
 {$DOMAIN}, www.{$DOMAIN} {
 	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-X-Powered-By
+		-Server
+	}
 	reverse_proxy frontend:80
 }
 
 api.{$DOMAIN} {
 	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-X-Powered-By
+		-Server
+	}
 	reverse_proxy core:8000
 }

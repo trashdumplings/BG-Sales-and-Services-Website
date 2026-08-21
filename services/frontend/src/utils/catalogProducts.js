@@ -19,6 +19,7 @@ export const normalizeCatalogProduct = (product, fallbackProducts = []) => {
     ...product,
     image: product.image_url || product.image || fallbackImage,
     previousPrice: product.previous_price ?? product.previousPrice ?? null,
+    inStock: product.in_stock ?? product.inStock ?? Number(product.stock) > 0,
     shortDescription: product.short_description || product.shortDescription || product.description,
     categoryLabel: product.category_label || product.categoryLabel || getCategoryLabel(product.category),
     specs: Array.isArray(product.specs) ? product.specs : [],
