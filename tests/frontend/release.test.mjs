@@ -13,6 +13,24 @@ test('production example enables release security guards', async () => {
   assert.match(env, /^CORS_ORIGINS=https:\/\//m)
 })
 
+test('production database startup is migration-gated and credentials are not URL-interpolated', async () => {
+  const compose = await read('docker-compose.prod.yml')
+  assert.match(compose, /^  migrate:$/m)
+  assert.match(compose, /working_dir: \/app\/server/)
+  assert.match(compose, /command: \["alembic", "upgrade", "head"\]/)
+  assert.match(compose, /condition: service_completed_successfully/)
+  assert.doesNotMatch(compose, /DATABASE_URL:\s*postgresql.*\$\{POSTGRES_PASSWORD\}/)
+})
+
+test('production secrets are mounted from files and infrastructure tags are pinned', async () => {
+  const compose = await read('docker-compose.prod.yml')
+  assert.match(compose, /POSTGRES_PASSWORD_FILE: \/run\/secrets\/postgres_password/)
+  assert.match(compose, /JWT_SECRET_FILE: \/run\/secrets\/jwt_secret/)
+  assert.doesNotMatch(compose, /image:\s*\S+:latest/)
+  assert.doesNotMatch(compose, /image:\s*postgres:16\s*$/m)
+  assert.doesNotMatch(compose, /image:\s*caddy:2-alpine\s*$/m)
+})
+
 test('nginx serves SPA routes and security headers', async () => {
   const config = await read('docker/nginx/default.conf')
   assert.match(config, /try_files\s+\$uri\s+\$uri\/\s+\/index\.html/)

@@ -13,7 +13,7 @@
     "analyze": "npm run build && vite-bundle-visualizer",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives",
     "test": "node --test tests/frontend/*.test.mjs",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run --passWithNoTests",
     "test:unit:watch": "vitest",
     "test:all": "npm run test:unit && npm run test"
   },

@@ -1,6 +1,7 @@
 import os
 import secrets
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 from urllib.parse import unquote, urlsplit
 
@@ -10,6 +11,13 @@ from dotenv import load_dotenv
 
 # Load .env from server/ or project root
 load_dotenv()
+
+
+def _secret_from_file(name: str, current: str) -> str:
+    file_name = os.getenv(f"{name}_FILE")
+    if current or not file_name:
+        return current
+    return Path(file_name).read_text(encoding="utf-8").strip()
 
 class Settings(BaseSettings):
     # App
@@ -51,6 +59,10 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = Field(default=True)
     EMAIL_FROM: str = Field(default="no-reply@example.com")
     INVENTORY_ALERT_EMAIL: str = Field(default="")
+
+    def model_post_init(self, __context) -> None:
+        self.JWT_SECRET = _secret_from_file("JWT_SECRET", self.JWT_SECRET)
+        self.SMTP_PASSWORD = _secret_from_file("SMTP_PASSWORD", self.SMTP_PASSWORD)
 
     # CORS
     CORS_ORIGINS: str = Field(default="http://localhost:3002,http://localhost:5173,http://localhost:3000,http://127.0.0.1:3002,http://127.0.0.1:5173,http://127.0.0.1:3000")
@@ -102,7 +114,10 @@ class Settings(BaseSettings):
             raise RuntimeError("Production TRUSTED_HOSTS must contain only deployed host names.")
         if any(origin.startswith("http://") for origin in self.origins_list):
             raise RuntimeError("Production CORS_ORIGINS must use HTTPS.")
-        database_password = unquote(urlsplit(self.DATABASE_URL).password or "").strip()
+        database_password = os.getenv("POSTGRES_PASSWORD", "")
+        database_password = _secret_from_file("POSTGRES_PASSWORD", database_password)
+        if not database_password:
+            database_password = unquote(urlsplit(self.DATABASE_URL).password or "").strip()
         normalized_database_password = database_password.lower()
         weak_database_passwords = {"", "postgres", "password", "admin", "changeme", "change-me"}
         if (
