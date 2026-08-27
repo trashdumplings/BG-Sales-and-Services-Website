@@ -34,11 +34,13 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-scroll': ['react-scroll'],
-          'vendor-icons': ['react-icons']
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/.test(id)) return 'vendor-react'
+          if (id.includes('/node_modules/framer-motion/')) return 'vendor-motion'
+          if (id.includes('/node_modules/react-scroll/')) return 'vendor-scroll'
+          if (id.includes('/node_modules/react-icons/')) return 'vendor-icons'
+          return undefined
         },
         chunkFileNames: 'js/[name]-[hash].js',
         entryFileNames: 'js/[name]-[hash].js',
@@ -61,5 +63,3 @@ export default defineConfig({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'react-scroll', 'react-icons']
   }
 })
-
-

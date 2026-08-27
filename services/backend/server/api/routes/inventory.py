@@ -16,7 +16,7 @@ from ...services.inventory import (
     list_inventory_items_service,
     update_inventory_item_service,
 )
-from ...utils.auth import get_current_user, require_admin_or_superadmin
+from ...utils.auth import require_module_permission
 
 router = APIRouter(prefix="/api/inventory", tags=["Inventory"])
 
@@ -26,7 +26,7 @@ def create_inventory_item(
     item: InventoryItemCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return create_inventory_item_service(db, item, background_tasks)
 
@@ -38,7 +38,7 @@ def get_inventory_items(
     category: Optional[str] = None,
     status: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return list_inventory_items_service(db, skip=skip, limit=limit, category=category, status=status)
 
@@ -49,7 +49,7 @@ def export_inventory_csv(
     category: Optional[str] = None,
     status: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return export_inventory_csv_service(db, category=category, status=status)
 
@@ -58,7 +58,7 @@ def export_inventory_csv(
 def get_inventory_item(
     item_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return get_inventory_item_service(db, item_id)
 
@@ -67,7 +67,7 @@ def get_inventory_item(
 def get_inventory_item_by_sku(
     sku: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return get_inventory_item_by_sku_service(db, sku)
 
@@ -78,7 +78,7 @@ def update_inventory_item(
     item_update: InventoryItemUpdate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return update_inventory_item_service(db, item_id=item_id, item_update=item_update, background_tasks=background_tasks)
 
@@ -87,7 +87,7 @@ def update_inventory_item(
 def delete_inventory_item(
     item_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     delete_inventory_item_service(db, item_id)
     return Response(status_code=204)
@@ -99,7 +99,6 @@ def adjust_inventory_quantity(
     adjustment: InventoryAdjust,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_superadmin),
+    current_user: User = Depends(require_module_permission("inventory")),
 ):
     return adjust_inventory_quantity_service(db, item_id=item_id, adjustment=adjustment, background_tasks=background_tasks)
-

@@ -1,18 +1,31 @@
 import React from 'react';
 import Layout from '../../../components/layout/DashboardLayout/Layout';
+import { useAuth } from '../../../stores/AuthProvider';
 import EmployeeList from '../../../components/dashboard/EmployeeList/EmployeeList';
 import InventoryList from '../../../components/dashboard/InventoryList/InventoryList';
 import LeaveManagement from '../../../components/dashboard/LeaveManagement/LeaveManagement';
 import AuditLogs from '../../../components/dashboard/AuditLogs/AuditLogs';
 import SystemSettings from '../../../components/dashboard/SystemSettings/SystemSettings';
-import PersonalDashboard from '../../../components/dashboard/PersonalDashboard/PersonalDashboard';
+import UserProfile from '../../../components/dashboard/UserProfile/UserProfile';
 import WorkLogs from '../../../components/dashboard/WorkLogs/WorkLogs';
 import UserManagement from '../../../components/dashboard/UserManagement/UserManagement';
 import SystemReports from '../../../components/dashboard/SystemReports/SystemReports';
 import ProductManager from '../../../components/dashboard/ProductManager/ProductManager';
+import DocumentManager from '../../../components/dashboard/DocumentManager/DocumentManager';
 
 const ModulePage = ({ title, icon: Icon }) => {
+  const { user } = useAuth();
+
   const renderContent = () => {
+    if ((title === "Admin Control Panel" || title === "User Management") && user?.role !== 'superadmin') {
+      return (
+        <div className="dash-hero">
+          <h1>Access denied</h1>
+          <p>User Management is available only to the Super Admin.</p>
+        </div>
+      );
+    }
+
     if (title === "Employee Directory") {
       return <EmployeeList />;
     }
@@ -32,7 +45,7 @@ const ModulePage = ({ title, icon: Icon }) => {
       return <SystemSettings />;
     }
     if (title === "My Profile") {
-      return <PersonalDashboard />;
+      return <UserProfile />;
     }
     if (title === "My Work Logs") {
       return <WorkLogs />;
@@ -43,6 +56,7 @@ const ModulePage = ({ title, icon: Icon }) => {
     if (title === "System Reports") {
       return <SystemReports />;
     }
+    if (title === "Business Documents") return <DocumentManager />;
 
     return (
       <>

@@ -15,6 +15,8 @@ depends_on = None
 
 
 def upgrade() -> None:
+    if sa.inspect(op.get_bind()).has_table("product_interactions"):
+        return
     op.create_table(
         "product_interactions",
         sa.Column("id", sa.Integer(), nullable=False),

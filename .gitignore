@@ -9,8 +9,11 @@ __pycache__/
 
 .env
 .env.*
+secrets/
+backups/
 !.env.example
 !.env.docker.example
+!.env.production.example
 !services/backend/server/env.example
 services/backend/server/.env
 services/backend/venv/
@@ -19,6 +22,18 @@ venv/
 .vscode/
 .qodo/
 Microsoft/
+
+# Local AI/editor tooling and audit artifacts
+.agents/
+.claude/
+.codex/
+.tools/
+strix_runs/
+ndis_reference/
+tmp-document-template-text/
+
+# Local visual-review captures
+tmp-*.png
 
 npm-debug.log*
 yarn-debug.log*

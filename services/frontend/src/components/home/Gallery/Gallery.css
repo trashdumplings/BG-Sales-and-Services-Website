@@ -1,7 +1,7 @@
-.home-work {
+﻿.home-work {
   width: min(1480px, calc(100% - 48px));
   margin: 0 auto;
-  color: #eef5fb;
+  color: var(--brand-fog);
 }
 
 .home-work__intro {
@@ -79,7 +79,7 @@
 
 .home-work-row:focus-visible,
 .home-work__archive > button:focus-visible {
-  outline: 3px solid #87bfff;
+  outline: 3px solid var(--brand-blue-pale);
   outline-offset: 4px;
 }
 
@@ -154,7 +154,7 @@
   bottom: -1px;
   left: 0;
   width: 3px;
-  background: #0466c8;
+  background: var(--brand-blue);
 }
 
 .home-work__sticky {
@@ -166,14 +166,14 @@
 .home-work__panel {
   min-height: 700px;
   overflow: hidden;
-  background: #001845;
+  background: var(--brand-ink-2);
 }
 
 .home-work__image {
   position: relative;
   height: 430px;
   overflow: hidden;
-  background: #001233;
+  background: var(--brand-ink);
 }
 
 .home-work__image img {
@@ -274,7 +274,7 @@
   left: 0;
   width: 6px;
   height: 1px;
-  background: #0466c8;
+  background: var(--brand-blue);
 }
 
 .home-work__archive {
@@ -338,7 +338,7 @@
   justify-content: space-between;
   gap: 30px;
   border-top: 1px solid rgba(0, 40, 85, 0.2);
-  color: #001845;
+  color: var(--brand-ink-2);
 }
 
 .home-work__transition span {

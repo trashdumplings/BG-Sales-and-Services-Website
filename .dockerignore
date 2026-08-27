@@ -14,7 +14,10 @@ services/backend/venv
 services/backend/server/__pycache__
 services/backend/server/uploads
 services/backend/server/.env
-.env
+.env*
+secrets
+backups
+*.dump
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

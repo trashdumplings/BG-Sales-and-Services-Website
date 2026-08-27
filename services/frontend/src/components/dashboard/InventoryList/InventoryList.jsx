@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   adjustInventoryQuantity,
   createInventoryItem,
@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../../stores/AuthProvider';
 import { LuSearch, LuFilter, LuPlus, LuPackage, LuTriangleAlert } from 'react-icons/lu';
 import DashboardTable from '../../common/DashboardTable/DashboardTable';
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback';
 import './InventoryList.css';
 
 const inventoryCategoryCodeMap = {
@@ -43,6 +44,7 @@ const inventoryColumns = [
 ];
 
 const InventoryList = () => {
+  const { notify } = useSystemFeedback();
   const { token } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ const InventoryList = () => {
     reorder_level: 10
   });
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getInventoryItems(token);
@@ -75,13 +77,13 @@ const InventoryList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchItems();
     }
-  }, [token]);
+  }, [fetchItems, token]);
 
   useEffect(() => {
     if (!showModal) return
@@ -123,7 +125,7 @@ const InventoryList = () => {
         reorder_level: 10
       });
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -134,7 +136,7 @@ const InventoryList = () => {
        await adjustInventoryQuantity(token, itemId, change);
        await fetchItems();
      } catch (err) {
-       alert(err.message);
+       notify(err.message);
      }
   };
 
@@ -156,8 +158,9 @@ const InventoryList = () => {
       <div className="list-controls">
         <div className="search-box">
           <LuSearch className="search-icon" />
-          <input 
-            type="text" 
+          <input
+            aria-label="Search inventory"
+            type="text"
             placeholder="Search SKU or Name..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -244,13 +247,13 @@ const InventoryList = () => {
                       try {
                         await updateInventoryItem(token, item.id, { cms_status: newStatus });
                         fetchItems();
-                      } catch (err) { alert(err.message); }
+                      } catch (err) { notify(err.message); }
                     }}
                   >
                     {item.cms_status === 'published' ? 'Draft' : 'Publish'}
                   </button>
-                  <button className="qty-btn plus" onClick={() => handleAdjustQuantity(item.id, 1)}>+</button>
-                  <button className="qty-btn minus" onClick={() => handleAdjustQuantity(item.id, -1)}>-</button>
+                  <button className="qty-btn plus" aria-label={`Increase quantity of ${item.name}`} onClick={() => handleAdjustQuantity(item.id, 1)}>+</button>
+                  <button className="qty-btn minus" aria-label={`Decrease quantity of ${item.name}`} onClick={() => handleAdjustQuantity(item.id, -1)}>-</button>
                 </div>
               );
             default:
@@ -264,7 +267,7 @@ const InventoryList = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h2>Add New Item</h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+              <button type="button" className="close-btn" aria-label="Close inventory form" onClick={() => setShowModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleAddSubmit} className="employee-form">
               <div className="form-row">

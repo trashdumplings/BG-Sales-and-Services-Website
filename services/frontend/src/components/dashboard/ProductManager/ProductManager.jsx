@@ -8,6 +8,7 @@ import {
   LuPackagePlus,
   LuPencil,
   LuSearch,
+  LuTags,
   LuTrash2,
   LuUpload,
   LuX,
@@ -15,12 +16,16 @@ import {
 import { useAuth } from '../../../stores/AuthProvider'
 import {
   createCatalogProduct,
+  createProductCategory,
   deleteCatalogProduct,
+  deleteProductCategory,
   getCatalogProducts,
+  getProductCategories,
   uploadCatalogProductImage,
   updateCatalogProduct,
 } from '../../../utils/api'
 import DashboardTable from '../../common/DashboardTable/DashboardTable'
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback'
 import './ProductManager.css'
 
 const emptyForm = {
@@ -39,16 +44,6 @@ const emptyForm = {
   featured: false,
   is_published: false,
 }
-
-const categories = [
-  ['laptop', 'Laptops'],
-  ['desktop', 'Desktops'],
-  ['printer', 'Printers'],
-  ['networking', 'Networking'],
-  ['audiovisual', 'Audio visual'],
-  ['power', 'Power & UPS'],
-  ['accessories', 'Accessories'],
-]
 
 const productColumns = [
   { key: 'product', label: 'Product', width: '34%' },
@@ -77,7 +72,7 @@ const slugify = (value) =>
     .replace(/^-+|-+$/g, '')
 
 const generateSku = (category, products, editingId = null) => {
-  const code = categoryCodeMap[category] || 'GEN'
+  const code = categoryCodeMap[category] || category.replace(/[^a-z0-9]/gi, '').slice(0, 3).toUpperCase() || 'GEN'
   const count = products.filter((product) => product.category === category && product.id !== editingId).length + 1
   return `BG-${code}-${String(count).padStart(3, '0')}`
 }
@@ -107,8 +102,13 @@ const toPayload = (form) => ({
 })
 
 export default function ProductManager() {
+  const { confirm } = useSystemFeedback()
   const { token } = useAuth()
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [categoryName, setCategoryName] = useState('')
+  const [categorySaving, setCategorySaving] = useState(false)
+  const [showCategories, setShowCategories] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -129,7 +129,22 @@ export default function ProductManager() {
     setLoading(true)
     setError('')
     try {
-      setProducts(await getCatalogProducts(token))
+      const [nextProducts, nextCategories] = await Promise.all([
+        getCatalogProducts(token),
+        getProductCategories(token),
+      ])
+      const knownCategorySlugs = new Set(nextCategories.map((category) => category.slug))
+      const categoriesInUse = nextProducts
+        .map((product) => product.category)
+        .filter((slug) => slug && !knownCategorySlugs.has(slug))
+        .filter((slug, index, slugs) => slugs.indexOf(slug) === index)
+        .map((slug) => ({
+          id: `legacy-${slug}`,
+          slug,
+          name: slug.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+        }))
+      setProducts(nextProducts)
+      setCategories([...nextCategories, ...categoriesInUse].sort((a, b) => a.name.localeCompare(b.name)))
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -236,7 +251,8 @@ export default function ProductManager() {
     setEditingId(null)
     setForm({
       ...emptyForm,
-      sku: generateSku(emptyForm.category, products),
+      category: categories[0]?.slug || '',
+      sku: generateSku(categories[0]?.slug || '', products),
     })
     setImageFile(null)
     setImagePreview('')
@@ -325,12 +341,54 @@ export default function ProductManager() {
   }
 
   const handleDelete = async (product) => {
-    if (!window.confirm(`Delete "${product.title}"? This cannot be undone.`)) return
+    const confirmed = await confirm({
+      title: 'Delete product?',
+      message: `"${product.title}" will be permanently removed from the catalog. This cannot be undone.`,
+      confirmLabel: 'Delete product',
+    })
+    if (!confirmed) return
     setError('')
     try {
       await deleteCatalogProduct(token, product.id)
       setProducts((current) => current.filter((item) => item.id !== product.id))
       setNotice('Product deleted.')
+    } catch (requestError) {
+      setError(requestError.message)
+    }
+  }
+
+  const handleCategoryCreate = async (event) => {
+    event.preventDefault()
+    if (!categoryName.trim()) return
+    setCategorySaving(true)
+    setError('')
+    try {
+      const created = await createProductCategory(token, categoryName.trim())
+      setCategories((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)))
+      setCategoryName('')
+      setNotice(`Category "${created.name}" added.`)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setCategorySaving(false)
+    }
+  }
+
+  const handleCategoryDelete = async (category) => {
+    const count = products.filter((product) => product.category === category.slug).length
+    const confirmed = await confirm({
+      title: 'Delete category?',
+      message: count
+        ? `"${category.name}" contains ${count} product(s). Move or delete them before removing this category.`
+        : `"${category.name}" will be permanently removed.`,
+      confirmLabel: count ? 'Close' : 'Delete category',
+    })
+    if (!confirmed || count) return
+    setError('')
+    try {
+      await deleteProductCategory(token, category.id)
+      setCategories((current) => current.filter((item) => item.id !== category.id))
+      setNotice(`Category "${category.name}" deleted.`)
     } catch (requestError) {
       setError(requestError.message)
     }
@@ -357,10 +415,23 @@ export default function ProductManager() {
           <h1>Product catalog</h1>
           <p>Create and manage the products customers see on the public storefront.</p>
         </div>
-        <button type="button" className="product-manager__add" onClick={openCreate}>
-          <LuPackagePlus /> Add product
-        </button>
+        <div className="product-manager__header-actions">
+          <button type="button" className="product-manager__categories-button" onClick={() => setShowCategories((current) => !current)} aria-expanded={showCategories}>
+            <LuTags /> Manage categories
+          </button>
+          <button type="button" className="product-manager__add" onClick={openCreate} disabled={!categories.length}>
+            <LuPackagePlus /> Add product
+          </button>
+        </div>
       </header>
+
+      {showCategories ? (
+        <section className="product-manager__category-panel" aria-labelledby="category-manager-title">
+          <div><span>Catalog structure</span><h2 id="category-manager-title">Product categories</h2><p>Add a category now, then select it when creating products.</p></div>
+          <form onSubmit={handleCategoryCreate}><label htmlFor="new-category">Category name</label><div><input id="new-category" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="e.g. Security cameras" minLength="2" maxLength="120" required /><button type="submit" disabled={categorySaving}>{categorySaving ? 'Adding…' : 'Add category'}</button></div></form>
+          <ul>{categories.map((category) => { const count = products.filter((product) => product.category === category.slug).length; return <li key={category.id}><span><strong>{category.name}</strong><small>{count} product{count === 1 ? '' : 's'} · {category.slug}</small></span><button type="button" onClick={() => handleCategoryDelete(category)} disabled={count > 0} aria-label={`Delete ${category.name}`} title={count ? 'Move or delete products in this category first' : `Delete ${category.name}`}><LuTrash2 /></button></li> })}</ul>
+        </section>
+      ) : null}
 
       <section className="product-manager__stats" aria-label="Catalog summary">
         <article><LuBox /><span>All products</span><strong>{stats.total}</strong></article>
@@ -376,7 +447,7 @@ export default function ProductManager() {
         <div className="product-manager__toolbar">
           <div className="product-manager__search">
             <LuSearch />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, brands, SKU..." />
+            <input aria-label="Search product catalog" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, brands, SKU..." />
           </div>
           <span>{filteredProducts.length} product{filteredProducts.length === 1 ? '' : 's'}</span>
         </div>
@@ -397,7 +468,7 @@ export default function ProductManager() {
                   return (
                     <div className="product-manager__product">
                       <div className="product-manager__thumb">
-                        {product.image_url ? <img src={product.image_url} alt="" /> : <LuBox />}
+                        {product.image_url ? <img src={product.image_url} alt={`${product.title} product`} /> : <LuBox aria-hidden="true" />}
                       </div>
                       <div>
                         <strong>{product.title}</strong>
@@ -421,6 +492,7 @@ export default function ProductManager() {
                     <button
                       type="button"
                       className={`product-manager__visibility ${product.is_published ? 'is-live' : ''}`}
+                      aria-label={`${product.is_published ? 'Unpublish' : 'Publish'} ${product.title}`}
                       onClick={() => togglePublished(product)}
                     >
                       {product.is_published ? <LuEye /> : <LuEyeOff />}
@@ -478,7 +550,7 @@ export default function ProductManager() {
                 <small>{isSkuEditable ? 'Enter your own stock code if you need a custom reference.' : 'Generated automatically from the selected category.'}</small>
               </label>
               <label>Brand<input required name="brand" value={form.brand} onChange={handleChange} /></label>
-              <label>Category<select name="category" value={form.category} onChange={handleChange}>{categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+              <label>Category<select required name="category" value={form.category} onChange={handleChange}>{categories.map((category) => <option key={category.id} value={category.slug}>{category.name}</option>)}</select></label>
               <label>Price (Nu.)<input required min="0" step="0.01" type="number" name="price" value={form.price} onChange={handleChange} /></label>
               <label>Previous price<input min="0" step="0.01" type="number" name="previous_price" value={form.previous_price} onChange={handleChange} /></label>
               <label>Stock<input required min="0" type="number" name="stock" value={form.stock} onChange={handleChange} /></label>

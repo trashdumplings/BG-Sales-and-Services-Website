@@ -1,7 +1,7 @@
-.home-about {
+﻿.home-about {
   width: min(1480px, calc(100% - 48px));
   margin: 0 auto;
-  color: #eef5fb;
+  color: var(--brand-fog);
 }
 
 .home-about__header {
@@ -69,7 +69,7 @@
   height: min(72vw, 780px);
   min-height: 590px;
   overflow: hidden;
-  background: #001233;
+  background: var(--brand-ink);
 }
 
 .home-about__media > img {

@@ -1,5 +1,5 @@
 import './Footer.css'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 const footerLinks = [
   { name: 'Home', href: '#hero' },

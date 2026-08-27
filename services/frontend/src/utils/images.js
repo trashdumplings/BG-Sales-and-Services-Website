@@ -65,7 +65,7 @@ export const supportsWebP = () => {
 }
 
 // Generate thumbnail placeholder
-export const generateBlurhash = (imageUrl) => {
+export const generateBlurhash = (_imageUrl) => {
   // Using CSS gradient as placeholder while loading
   return 'linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0)'
 }

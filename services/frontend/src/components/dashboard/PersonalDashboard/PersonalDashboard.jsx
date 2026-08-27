@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../stores/AuthProvider';
 import { LuClock, LuCalendar, LuCircleCheck, LuActivity, LuInfo } from 'react-icons/lu';
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback';
 import './PersonalDashboard.css';
 
 const PersonalDashboard = () => {
+  const { notify } = useSystemFeedback();
   const { token } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [attendanceStatus, setAttendanceStatus] = useState(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/profile/me`, {
@@ -29,11 +31,11 @@ const PersonalDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) fetchData();
-  }, [token]);
+  }, [fetchData, token]);
 
   const handleCheckIn = async () => {
     try {
@@ -44,7 +46,7 @@ const PersonalDashboard = () => {
       if (!response.ok) throw new Error('Check-in failed');
       await fetchData();
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     }
   };
 
@@ -57,7 +59,7 @@ const PersonalDashboard = () => {
       if (!response.ok) throw new Error('Check-out failed');
       await fetchData();
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     }
   };
 

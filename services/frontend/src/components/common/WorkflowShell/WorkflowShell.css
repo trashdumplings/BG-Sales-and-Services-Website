@@ -1,0 +1,95 @@
+.workflow-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.workflow-shell__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.workflow-shell__tab-list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  overflow-x: auto;
+}
+
+.workflow-shell__tab {
+  padding: 0.55rem 1.1rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--tab-color, var(--brand-slate));
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.workflow-shell__tab:hover {
+  opacity: 0.8;
+}
+
+.workflow-shell__tab.is-active {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--tab-color, var(--brand-slate)) 45%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tab-color, var(--brand-slate)) 20%, transparent);
+}
+
+.workflow-shell__tab--neutral { --tab-color: var(--brand-ink); }
+.workflow-shell__tab--muted { --tab-color: var(--brand-slate); }
+.workflow-shell__tab--info { --tab-color: var(--status-info); }
+.workflow-shell__tab--success { --tab-color: var(--status-success); }
+.workflow-shell__tab--warning { --tab-color: var(--status-warning); }
+.workflow-shell__tab--danger { --tab-color: var(--status-danger); }
+
+.workflow-shell__history {
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-muted);
+}
+
+.workflow-shell__history h3 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--body-text);
+}
+
+.workflow-shell__history ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workflow-shell__history li {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.workflow-shell__history-label {
+  font-weight: 600;
+  color: var(--body-text);
+}
+
+.workflow-shell__history-time {
+  color: var(--text-secondary);
+}
+
+.workflow-shell__history-note {
+  margin: 0.25rem 0 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}

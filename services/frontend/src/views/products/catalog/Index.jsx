@@ -1,4 +1,5 @@
 import './Products.css'
+import '../StorefrontRefinement.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
@@ -145,9 +146,9 @@ const Products = ({ products = [] }) => {
 
     const stockFiltered =
       stockFilter === 'available'
-        ? brandFiltered.filter((product) => product.stock > 0)
-        : stockFilter === 'low'
-          ? brandFiltered.filter((product) => product.stock > 0 && product.stock <= 5)
+        ? brandFiltered.filter((product) => product.inStock)
+        : stockFilter === 'unavailable'
+          ? brandFiltered.filter((product) => !product.inStock)
           : brandFiltered
 
     const priceFiltered = stockFiltered.filter((product) => {
@@ -175,38 +176,19 @@ const Products = ({ products = [] }) => {
     return sortProducts(searchFiltered, sortBy)
   }, [activeCategory, priceBand, products, searchTerm, selectedBrand, sortBy, stockFilter])
 
-  const shelfSections = useMemo(
-    () => [
-      {
-        id: 'featured',
-        label: 'Featured',
-        title: 'Recommended for business teams',
-        href: '#catalog',
-        products: products.filter((product) => product.featured).slice(0, 6),
-      },
-      {
-        id: 'deals',
-        label: 'Deals & offers',
-        title: 'Current savings',
-        href: '#catalog',
-        products: products
-          .filter((product) => product.previousPrice && product.previousPrice > product.price)
-          .sort((a, b) => b.previousPrice - b.price - (a.previousPrice - a.price))
-          .slice(0, 6),
-      },
-      {
-        id: 'top-stock',
-        label: 'Ready stock',
-        title: 'Available now',
-        href: '#catalog',
-        products: [...products].sort((a, b) => b.stock - a.stock).slice(0, 6),
-      },
-    ],
-    [products],
-  )
-
   const activeCategoryLabel =
     productCategories.find((item) => item.slug === activeCategory)?.label ?? 'All Products'
+  const groupedProducts = useMemo(
+    () =>
+      productCategories
+        .filter((item) => item.slug !== 'all')
+        .map((item) => ({
+          ...item,
+          products: filteredProducts.filter((product) => product.category === item.slug),
+        }))
+        .filter((item) => item.products.length > 0),
+    [filteredProducts, productCategories],
+  )
   const selectedQuoteProduct = products.find((product) => product.slug === quoteProduct)
   const basketCount = quoteItems.reduce((total, item) => total + item.quantity, 0)
   const basketTotal = quoteItems.reduce(
@@ -315,43 +297,6 @@ const Products = ({ products = [] }) => {
     )
   }
 
-  const shelfCard = (product) => {
-    const discountAmount = product.previousPrice ? product.previousPrice - product.price : 0
-
-    return (
-      <article className="product-shelf-card" key={product.slug}>
-        <Link to={`/product/${product.slug}`} className="product-shelf-card__image">
-          <img src={product.image} alt={product.title} />
-          {discountAmount > 0 && <span>{formatCurrency(discountAmount)} off</span>}
-        </Link>
-        <div className="product-shelf-card__body">
-          <span>{product.categoryLabel}</span>
-          <Link to={`/product/${product.slug}`}>
-            <strong>{product.title}</strong>
-          </Link>
-          <small>{product.specs.slice(0, 2).join(' / ')}</small>
-          <div>
-            <em>{formatCurrency(product.price)}</em>
-            {product.previousPrice ? <del>{formatCurrency(product.previousPrice)}</del> : null}
-          </div>
-          <button
-            type="button"
-            onClick={() =>
-              quoteItems.some((item) => item.product.slug === product.slug)
-                ? setIsQuoteOpen(true)
-                : addToQuote(product)
-            }
-          >
-            {quoteItems.some((item) => item.product.slug === product.slug)
-              ? 'In quote basket'
-              : 'Add to quote'}{' '}
-            <FiArrowRight />
-          </button>
-        </div>
-      </article>
-    )
-  }
-
   return (
     <div className="products-page">
       <header className="products-logo-section">
@@ -363,7 +308,7 @@ const Products = ({ products = [] }) => {
           <Link to="/">Home</Link>
           <a href="#categories">Categories</a>
           <a href="#catalog">Catalog</a>
-          <a href="#quote">Quote basket</a>
+          <a href="mailto:bgsales@outlook.com">Contact sales</a>
           <button
             className="products-nav-quote"
             type="button"
@@ -392,25 +337,25 @@ const Products = ({ products = [] }) => {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span className="products-hero__kicker">Technology storefront</span>
+          <span className="products-hero__kicker">Business technology, thoughtfully sourced</span>
           <h1>
-            Shop business
-            <span>technology.</span>
+            Technology for
+            <span>better work.</span>
           </h1>
           <p>
-            Browse products like an online store, shortlist the right equipment, then request
-            confirmed pricing, availability, and deployment support from BG Sales.
+            Explore dependable workplace technology, compare essential specifications, and receive
+            a tailored quotation with availability and deployment guidance.
           </p>
           <div className="products-hero__actions">
-            <a className="products-hero__primary" href="#categories">
-              Shop categories <FiArrowDown />
+            <a className="products-hero__primary" href="#catalog">
+              Browse products <FiArrowDown />
             </a>
             <button
               className="products-hero__secondary"
               type="button"
               onClick={() => setIsQuoteOpen(true)}
             >
-              Open quote cart <FiShoppingBag />
+              Request a quote <FiShoppingBag />
             </button>
           </div>
         </motion.div>
@@ -418,28 +363,6 @@ const Products = ({ products = [] }) => {
           <span>Store</span>
           <div />
           <span>{products.length} products</span>
-        </div>
-      </section>
-
-      <section className="store-search-panel" aria-label="Product search">
-        <div className="store-search-panel__box">
-          <FiSearch />
-          <input
-            type="text"
-            placeholder="Search laptops, desktops, printers, specs..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
-          <a href="#catalog">Search</a>
-        </div>
-        <div className="store-search-panel__links">
-          {brands
-            .filter((brand) => brand !== 'all')
-            .map((brand) => (
-              <button key={brand} type="button" onClick={() => setSelectedBrand(brand)}>
-                {brand}
-              </button>
-            ))}
         </div>
       </section>
 
@@ -465,60 +388,6 @@ const Products = ({ products = [] }) => {
               {item.image ? <img src={item.image} alt="" /> : null}
             </button>
           ))}
-        </div>
-      </section>
-
-      <section className="featured-strip">
-        <div className="featured-strip__intro">
-          <span>Store highlights</span>
-          <p>Quick links into the products buyers usually want to compare first.</p>
-        </div>
-        <div className="featured-strip__inner">
-          {products.filter((product) => product.featured).slice(0, 4).map((product) => (
-            <Link key={product.id} to={`/product/${product.slug}`} className="featured-strip__card">
-              <span className="featured-strip__label">{product.categoryLabel}</span>
-              <strong>{product.title}</strong>
-              <span>{formatCurrency(product.price)}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="store-shelves">
-        {shelfSections.map((section) => (
-          <div className="product-shelf" key={section.id}>
-            <div className="shop-section-heading">
-              <div>
-                <span>{section.label}</span>
-                <h2>{section.title}</h2>
-              </div>
-              <a href={section.href}>View all <FiArrowUpRight /></a>
-            </div>
-            <div className="product-shelf__rail">
-              {section.products.map((product) => shelfCard(product))}
-            </div>
-          </div>
-        ))}
-      </section>
-
-      <section className="commerce-path" aria-label="Buying process">
-        <div>
-          <FiSearch />
-          <span>01</span>
-          <strong>Browse like a store</strong>
-          <p>Search products, open shelves, and filter by category, brand, stock, and budget.</p>
-        </div>
-        <div>
-          <FiSliders />
-          <span>02</span>
-          <strong>Add to quote</strong>
-          <p>Shortlist multiple products into a quote basket instead of a payment cart.</p>
-        </div>
-        <div>
-          <FiMail />
-          <span>03</span>
-          <strong>Confirm pricing</strong>
-          <p>Send the basket to the team for stock, pricing, delivery, and installation support.</p>
         </div>
       </section>
 
@@ -581,7 +450,7 @@ const Products = ({ products = [] }) => {
                 <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
                   <option value="all">All stock</option>
                   <option value="available">In stock</option>
-                  <option value="low">Low stock</option>
+                  <option value="unavailable">Unavailable</option>
                 </select>
               </label>
 
@@ -627,41 +496,74 @@ const Products = ({ products = [] }) => {
         <div className="catalog-main">
           <div className="products-section__heading">
             <div>
-              <p className="section-eyebrow">All products</p>
-              <h2>{activeCategoryLabel}</h2>
+              <p className="section-eyebrow">
+                {activeCategory === 'all' ? 'Browse the catalog' : 'Selected category'}
+              </p>
+              <h2>{activeCategory === 'all' ? 'Products by category' : activeCategoryLabel}</h2>
             </div>
             <p>
-              Store-style browsing for featured products, team procurement, and quotation-based sales.
+              {activeCategory === 'all'
+                ? 'Each product is organized under its category for quicker comparison and procurement.'
+                : `Browse all ${activeCategoryLabel.toLowerCase()} matching your current filters.`}
             </p>
           </div>
 
-          <motion.div
-            className="products-grid"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <Card
-                    product={product}
-                    onAddToQuote={addToQuote}
-                    onOpenQuote={() => setIsQuoteOpen(true)}
-                    isAdded={quoteItems.some((item) => item.product.slug === product.slug)}
-                  />
-                </motion.div>
-              ))
-            ) : (
-              <div className="no-products">
-                <p>No products found matching your filters.</p>
-                <button type="button" onClick={resetFilters}>
-                  Reset filters
-                </button>
-              </div>
-            )}
-          </motion.div>
+          {groupedProducts.length > 0 ? (
+            <div className="product-category-groups">
+              {groupedProducts.map((group) => (
+                <section
+                  className="product-category-group"
+                  id={`catalog-${group.slug}`}
+                  key={group.slug}
+                  aria-labelledby={`catalog-${group.slug}-heading`}
+                >
+                  <div className="product-category-group__heading">
+                    <div>
+                      <span>{group.products.length} {group.products.length === 1 ? 'item' : 'items'}</span>
+                      <h3 id={`catalog-${group.slug}-heading`}>{group.label}</h3>
+                    </div>
+                    {activeCategory === 'all' ? (
+                      <Link to={`/products/${group.slug}`}>
+                        View {group.label} <FiArrowUpRight />
+                      </Link>
+                    ) : null}
+                  </div>
+
+                  <motion.div
+                    className="products-grid"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {group.products.map((product) => (
+                      <motion.div key={product.id} variants={itemVariants}>
+                        <Card
+                          product={product}
+                          onAddToQuote={addToQuote}
+                          onOpenQuote={() => setIsQuoteOpen(true)}
+                          isAdded={quoteItems.some((item) => item.product.slug === product.slug)}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="no-products">
+              <p>No products found matching your filters.</p>
+              <button type="button" onClick={resetFilters}>
+                Reset filters
+              </button>
+            </div>
+          )}
         </div>
+      </section>
+
+      <section className="commerce-path" aria-label="How quotations work">
+        <div><FiSearch /><span>01</span><strong>Explore</strong><p>Filter the catalog and compare the specifications that matter.</p></div>
+        <div><FiSliders /><span>02</span><strong>Shortlist</strong><p>Add one or more products and adjust the required quantities.</p></div>
+        <div><FiMail /><span>03</span><strong>Confirm</strong><p>Our sales team confirms pricing, stock, delivery, and support.</p></div>
       </section>
 
       <section className="quote-flow" id="quote">
@@ -686,6 +588,11 @@ const Products = ({ products = [] }) => {
         </div>
 
         <form className="quote-flow__form" onSubmit={(event) => event.preventDefault()}>
+          <div className="quote-form__heading">
+            <span>Inquiry details</span>
+            <p>Choose a product or send a general request. We will confirm availability and pricing.</p>
+          </div>
+
           <div className="quote-basket">
             <span>Basket items</span>
             {quoteItems.length > 0 ? (
@@ -697,7 +604,11 @@ const Products = ({ products = [] }) => {
                       <strong>{item.product.title}</strong>
                       <small>{item.quantity} x {formatCurrency(item.product.price)}</small>
                     </div>
-                    <button type="button" onClick={() => removeFromQuote(item.product.slug)}>
+                    <button
+                      type="button"
+                      onClick={() => removeFromQuote(item.product.slug)}
+                      aria-label={`Remove ${item.product.title} from quote basket`}
+                    >
                       <FiTrash2 />
                     </button>
                   </li>
@@ -708,9 +619,13 @@ const Products = ({ products = [] }) => {
             )}
           </div>
 
-          <label>
-            Add single product
-            <select value={quoteProduct} onChange={(event) => setQuoteProduct(event.target.value)}>
+          <label className="quote-field">
+            <span>Add a product</span>
+            <select
+              value={quoteProduct}
+              onChange={(event) => setQuoteProduct(event.target.value)}
+              aria-describedby="quote-product-help"
+            >
               <option value="">General product inquiry</option>
               {products.map((product) => (
                 <option key={product.slug} value={product.slug}>
@@ -718,30 +633,33 @@ const Products = ({ products = [] }) => {
                 </option>
               ))}
             </select>
+            <small id="quote-product-help">Optional if products are already in your basket.</small>
           </label>
 
-          <label>
-            Quantity for single product
+          <label className="quote-field">
+            <span>Quantity</span>
             <input
               type="number"
               min="1"
+              inputMode="numeric"
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
             />
           </label>
 
-          <label>
-            Email or phone
+          <label className="quote-field quote-field--full">
+            <span>Email or phone</span>
             <input
               type="text"
               placeholder="Where should we reply?"
+              autoComplete="email"
               value={buyerContact}
               onChange={(event) => setBuyerContact(event.target.value)}
             />
           </label>
 
-          <label>
-            Notes
+          <label className="quote-field quote-field--full">
+            <span>Project notes</span>
             <textarea
               rows="4"
               placeholder="Mention delivery, installation, preferred brand, or project requirements."
@@ -753,7 +671,9 @@ const Products = ({ products = [] }) => {
           <a className="quote-flow__submit" href={quoteMailto}>
             Prepare inquiry <FiArrowUpRight />
           </a>
-          <small>Online submission will replace this mail flow once the backend endpoint is ready.</small>
+          <small className="quote-flow__mail-note">
+            This opens your email app with the inquiry details prepared for review.
+          </small>
         </form>
       </section>
 

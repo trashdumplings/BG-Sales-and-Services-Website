@@ -1,14 +1,16 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from .api import routers
-from .db import engine, Base
+from .db import engine, Base, SessionLocal
 from .config import get_settings
 from .services.products import UPLOAD_DIR
-from .utils.auth import get_current_user
+from .utils.auth import get_current_user, users_with_default_passwords
 from .models import User
 
 settings = get_settings()
@@ -35,7 +37,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts_list)
-if not settings.DEBUG:
+if settings.ENFORCE_HTTPS:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # CORS setup
@@ -43,8 +45,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=600,
 )
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="product-uploads")
@@ -58,8 +61,19 @@ def on_startup():
             print("Database connection successful and tables created/verified")
         else:
             print("Database connection successful; AUTO_CREATE_TABLES disabled, expecting Alembic-managed schema")
+        if not settings.DEBUG:
+            with SessionLocal() as db:
+                unsafe_users = users_with_default_passwords(
+                    db.query(User).filter(User.is_active.is_(True)).all()
+                )
+            if unsafe_users:
+                raise RuntimeError(
+                    "Production startup refused: default passwords remain for "
+                    + ", ".join(unsafe_users)
+                )
     except Exception as e:
-        print(f"Database connection error: {e}")
+        print(f"Startup validation error: {e}")
+        raise
 
 # Include routers
 for router in routers:
@@ -68,15 +82,13 @@ for router in routers:
 @app.get("/")
 def root():
     """Root endpoint - provides API information"""
-    return {
+    response = {
         "message": settings.APP_NAME,
         "version": "0.1.0",
-        "docs": {
-            "swagger_ui": "/docs",
-            "redoc": "/redoc",
-            "openapi_json": "/openapi.json"
-        },
-        "endpoints": {
+        "health": "/health",
+    }
+    if settings.DEBUG:
+        response["endpoints"] = {
             "auth": "/auth",
             "employees": "/api/employees",
             "inventory": "/api/inventory",
@@ -84,14 +96,31 @@ def root():
             "reports": "/api/reports/monthly-summary",
             "leaves": "/api/leaves",
             "admin": "/admin",
-            "health": "/health"
-        },
-        "note": "This is an API server. Visit /docs for interactive API documentation."
-    }
+        }
+        response["docs"] = {
+            "swagger_ui": "/docs",
+            "redoc": "/redoc",
+            "openapi_json": "/openapi.json",
+        }
+    return response
 
 @app.get("/health")
 def health():
     return {"status": "ok", "service": settings.APP_NAME}
+
+
+@app.get("/ready")
+def ready():
+    """Readiness probe: only advertise the API when its database is usable."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc
+    return {"status": "ready", "service": settings.APP_NAME}
 
 # Dashboard endpoint (example)
 @app.get("/dashboard")

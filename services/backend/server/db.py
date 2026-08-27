@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from urllib.parse import quote_plus
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from dotenv import load_dotenv
 
@@ -12,31 +12,35 @@ if not env_file.exists():
     env_file = BASE_DIR.parent / ".env"
 load_dotenv(env_file)
 
-# Get DATABASE_URL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/bgsale_portal")
+def _read_secret(name: str) -> str | None:
+    value = os.getenv(name)
+    file_name = os.getenv(f"{name}_FILE")
+    if value or not file_name:
+        return value
+    return Path(file_name).read_text(encoding="utf-8").strip()
 
-# Clean up DATABASE_URL
-if DATABASE_URL.startswith("DATABASE_URL="):
-    DATABASE_URL = DATABASE_URL.replace("DATABASE_URL=", "", 1).strip()
 
-# Fix DATABASE_URL encoding for special characters in password
-try:
-    if DATABASE_URL.count('@') > 1:
-        if '://' in DATABASE_URL:
-            scheme_part = DATABASE_URL.split('://')[0] + '://'
-            rest = DATABASE_URL.split('://', 1)[1]
-            last_at_idx = rest.rfind('@')
-            if last_at_idx > 0:
-                auth_part = rest[:last_at_idx]
-                host_db_part = rest[last_at_idx + 1:]
-                if ':' in auth_part:
-                    first_colon = auth_part.find(':')
-                    username = auth_part[:first_colon]
-                    password = auth_part[first_colon + 1:]
-                    encoded_password = quote_plus(password)
-                    DATABASE_URL = f"{scheme_part}{username}:{encoded_password}@{host_db_part}"
-except Exception as e:
-    print(f"WARNING: Could not fix DATABASE_URL encoding: {e}")
+def _database_url():
+    explicit_url = os.getenv("DATABASE_URL")
+    if explicit_url:
+        return explicit_url.removeprefix("DATABASE_URL=").strip()
+
+    # URL.create performs correct credential escaping, including @, :, /, #, and %.
+    password = _read_secret("POSTGRES_PASSWORD")
+    if password is not None or os.getenv("POSTGRES_HOST"):
+        return URL.create(
+            "postgresql+psycopg2",
+            username=os.getenv("POSTGRES_USER", "postgres"),
+            password=password or "",
+            host=os.getenv("POSTGRES_HOST", "postgres"),
+            port=int(os.getenv("POSTGRES_PORT", "5432")),
+            database=os.getenv("POSTGRES_DB", "bgsale_portal"),
+        )
+
+    return "postgresql+psycopg2://postgres:postgres@localhost:5432/bgsale_portal"
+
+
+DATABASE_URL = _database_url()
 
 class Base(DeclarativeBase):
     pass

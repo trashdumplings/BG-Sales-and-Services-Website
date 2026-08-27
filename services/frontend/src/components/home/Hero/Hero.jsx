@@ -1,11 +1,12 @@
 import './Hero.css'
-import { lazy, Suspense, useRef } from 'react'
+import { lazy, Suspense, useLayoutEffect, useRef } from 'react'
+import { createTimeline, stagger } from 'animejs'
 import {
   motion,
   useReducedMotion,
   useScroll,
   useTransform,
-} from 'framer-motion'
+} from 'motion/react'
 import { FiArrowDownRight, FiArrowUpRight } from 'react-icons/fi'
 import heroImage from '../../../assets/landing-bhutan/hero-thimphu-v2.jpg'
 
@@ -23,6 +24,55 @@ const Hero = () => {
   const copyY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 72])
   const copyOpacity = useTransform(scrollYProgress, [0, 0.74], [1, 0])
   const lineScale = useTransform(scrollYProgress, [0, 0.55], [0, 1])
+
+  useLayoutEffect(() => {
+    const hero = heroRef.current
+    if (!hero || reduceMotion) return undefined
+
+    hero.classList.add('is-anime-ready')
+    const timeline = createTimeline({
+      defaults: {
+        ease: 'outExpo',
+      },
+    })
+
+    timeline
+      .add(hero.querySelectorAll('[data-hero-meta]'), {
+        opacity: [0, 1],
+        y: [12, 0],
+        duration: 650,
+        delay: stagger(70),
+      })
+      .add(hero.querySelectorAll('[data-hero-line]'), {
+        opacity: [0, 1],
+        y: [44, 0],
+        duration: 980,
+        delay: stagger(120),
+      }, '-=420')
+      .add(hero.querySelectorAll('[data-hero-support]'), {
+        opacity: [0, 1],
+        y: [20, 0],
+        duration: 720,
+        delay: stagger(90),
+      }, '-=520')
+      .add(hero.querySelectorAll('[data-signal-node]'), {
+        opacity: [0, 1],
+        scale: [0.2, 1],
+        duration: 520,
+        delay: stagger(100),
+      }, '-=520')
+      .add(hero.querySelectorAll('[data-signal-line]'), {
+        opacity: [0, 1],
+        scaleX: [0, 1],
+        duration: 620,
+        delay: stagger(90),
+      }, '-=560')
+
+    return () => {
+      timeline.revert()
+      hero.classList.remove('is-anime-ready')
+    }
+  }, [reduceMotion])
 
   return (
     <section className='cinematic-hero' id='hero' ref={heroRef}>
@@ -45,46 +95,36 @@ const Hero = () => {
         style={{ y: copyY, opacity: copyOpacity }}
       >
         <div className='cinematic-hero__meta'>
-          <span>BG Sales &amp; Supplies</span>
-          <span>Thimphu, Bhutan</span>
+          <span data-hero-meta>BG Sales &amp; Supplies</span>
+          <span data-hero-meta>Thimphu, Bhutan</span>
         </div>
 
         <h1 className='cinematic-hero__headline'>
-          <motion.div
+          <div
             className='cinematic-hero__headline-primary'
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 36 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
+            data-hero-line
           >
             <span>We build the systems</span>
             <span>behind</span>
-          </motion.div>
+          </div>
 
-          <motion.div
+          <div
             className='cinematic-hero__headline-accent'
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 42 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.05, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            data-hero-line
           >
             better business.
-          </motion.div>
+          </div>
         </h1>
 
         <div className='cinematic-hero__lower'>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.9, delay: 0.45 }}
-          >
+          <p data-hero-support>
             Technology, infrastructure, and support designed as one dependable
             system—built for organizations across Bhutan.
-          </motion.p>
+          </p>
 
-          <motion.div
+          <div
             className='cinematic-hero__actions'
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.55 }}
+            data-hero-support
           >
             <a
               href='#service'
@@ -98,9 +138,17 @@ const Hero = () => {
             >
               Request a quotation <FiArrowUpRight />
             </a>
-          </motion.div>
+          </div>
         </div>
       </motion.div>
+
+      <div className='cinematic-hero__signal' aria-hidden='true' data-hero-support>
+        <span data-signal-node />
+        <i data-signal-line />
+        <span data-signal-node />
+        <i data-signal-line />
+        <span data-signal-node />
+      </div>
 
       <div className='cinematic-hero__footer'>
         <span>ICT / MEP / Consulting</span>

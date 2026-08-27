@@ -1,0 +1,209 @@
+# Production stack: Caddy terminates TLS (automatic Let's Encrypt) and is the only service
+# reachable from the internet. Postgres, pgAdmin, core, and frontend are only reachable over
+# the internal compose network (pgAdmin is also bound to loopback for optional SSH-tunnel access).
+#
+# Before first run:
+#   1. Point DNS A/AAAA records for your-domain.com, www.your-domain.com, and
+#      api.your-domain.com at this server's IP.
+#   2. Copy .env.production.example to .env, set the non-secret deployment values,
+#      and create each secret file referenced there (one raw secret per file, no quotes).
+#   3. docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+services:
+  postgres:
+    image: postgres:16.15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in your .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in your .env file}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    # No ports published at all: only reachable from other containers on the compose
+    # network. For interactive access use `docker compose -f docker-compose.prod.yml
+    # exec postgres psql -U <user> -d <db>`, or an SSH tunnel if you need a GUI client.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dbadmin:
+    image: dpage/pgadmin4:9.17
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:?Set PGADMIN_DEFAULT_EMAIL in your .env file}
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "True"
+      PGADMIN_CONFIG_LOGIN_BANNER: "'BG Sale DB Admin'"
+    ports:
+      # Loopback only. Reach it from your machine via:
+      #   ssh -L 5050:localhost:5050 user@your-server
+      # then browse http://localhost:5050 locally.
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    secrets:
+      - pgadmin_password
+
+  migrate:
+    build:
+      context: .
+      dockerfile: services/backend/server/Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: &backend-environment
+      DEBUG: ${APP_DEBUG:-false}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in your .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in your .env file}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AUTO_CREATE_TABLES: ${AUTO_CREATE_TABLES:-false}
+      ALLOW_PUBLIC_REGISTRATION: ${ALLOW_PUBLIC_REGISTRATION:-false}
+      ENFORCE_HTTPS: ${ENFORCE_HTTPS:-true}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:?Set TRUSTED_HOSTS in your .env file}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS in your .env file}
+      HEALTHCHECK_HOST: api.${DOMAIN:?Set DOMAIN in your .env file}
+    secrets:
+      - jwt_secret
+      - postgres_password
+    working_dir: /app/server
+    command: ["alembic", "upgrade", "head"]
+
+  core:
+    build:
+      context: .
+      dockerfile: services/backend/server/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *backend-environment
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      REFRESH_TOKEN_REMEMBER_DAYS: ${REFRESH_TOKEN_REMEMBER_DAYS:-30}
+      REFRESH_TOKEN_SESSION_HOURS: ${REFRESH_TOKEN_SESSION_HOURS:-8}
+      SESSION_IDLE_TIMEOUT_MINUTES: ${SESSION_IDLE_TIMEOUT_MINUTES:-30}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      INVENTORY_ALERT_EMAIL: ${INVENTORY_ALERT_EMAIL:-}
+      PRODUCT_UPLOAD_DIR: /app/uploads
+    # No ports published: only reachable from the Caddy container over the compose network.
+    volumes:
+      - product_uploads:/app/uploads
+    secrets:
+      - jwt_secret
+      - postgres_password
+      - smtp_password
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/ready', headers={'Host': os.environ['HEALTHCHECK_HOST']}); urllib.request.urlopen(request)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:?Set VITE_API_BASE in your .env file, e.g. https://api.your-domain.com}
+        VITE_ALLOW_PUBLIC_REGISTRATION: ${VITE_ALLOW_PUBLIC_REGISTRATION:-false}
+    restart: unless-stopped
+    depends_on:
+      core:
+        condition: service_healthy
+    # No ports published: only reachable from the Caddy container over the compose network.
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    depends_on:
+      core:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in your .env file, e.g. your-domain.com}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in your .env file for Let's Encrypt notifications}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  backup:
+    image: postgres:16.15
+    profiles: ["ops"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in your .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in your .env file}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_HOST: postgres
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    secrets:
+      - postgres_password
+    volumes:
+      - ./backups:/backups
+      - product_uploads:/uploads:ro
+      - ./docker/backup/backup.sh:/usr/local/bin/backup.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/backup.sh"]
+
+  restore:
+    image: postgres:16.15
+    profiles: ["ops"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in your .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in your .env file}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_HOST: postgres
+      BACKUP_FILE: ${BACKUP_FILE:-}
+      CONFIRM_RESTORE: ${CONFIRM_RESTORE:-}
+      RESTORE_UPLOADS: ${RESTORE_UPLOADS:-false}
+      UPLOAD_BACKUP_FILE: ${UPLOAD_BACKUP_FILE:-}
+    secrets:
+      - postgres_password
+    volumes:
+      - ./backups:/backups:ro
+      - product_uploads:/uploads
+      - ./docker/backup/restore.sh:/usr/local/bin/restore.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/restore.sh"]
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  product_uploads:
+  caddy_data:
+  caddy_config:
+
+secrets:
+  postgres_password:
+    file: ${POSTGRES_PASSWORD_FILE:-./secrets/postgres_password}
+  pgadmin_password:
+    file: ${PGADMIN_PASSWORD_FILE:-./secrets/pgadmin_password}
+  jwt_secret:
+    file: ${JWT_SECRET_FILE:-./secrets/jwt_secret}
+  smtp_password:
+    file: ${SMTP_PASSWORD_FILE:-./secrets/smtp_password}

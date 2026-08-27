@@ -1,9 +1,36 @@
 from datetime import datetime, date
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from .models import UserRole
 
 # Auth schemas
+COMMON_PASSWORD_MARKERS = {
+    "password", "passw0rd", "qwerty", "letmein", "welcome", "admin",
+    "superadmin", "changeme", "whatever", "company", "123456", "12345678",
+}
+
+
+def validate_strong_password(value: str) -> str:
+    if not 12 <= len(value) <= 128:
+        raise ValueError("Password must be between 12 and 128 characters")
+    classes = (
+        any(char.islower() for char in value),
+        any(char.isupper() for char in value),
+        any(char.isdigit() for char in value),
+        any(not char.isalnum() for char in value),
+    )
+    if sum(classes) < 3:
+        raise ValueError("Password must use at least three of: lowercase, uppercase, number, symbol")
+    normalized = "".join(char for char in value.lower() if char.isalnum())
+    if any(
+        normalized == marker
+        or (normalized.startswith(marker) and len(normalized) <= len(marker) + 6)
+        for marker in COMMON_PASSWORD_MARKERS
+    ):
+        raise ValueError("Password is too common or predictable")
+    return value
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -33,6 +60,7 @@ class UserOut(BaseModel):
     name: str
     email: EmailStr
     role: UserRole
+    module_permissions: List[str] = Field(default_factory=list)
     is_active: bool
     last_login: Optional[datetime] = None
     created_at: datetime
@@ -42,10 +70,54 @@ class UserOut(BaseModel):
         from_attributes = True
 
 class RegisterIn(BaseModel):
-    name: str
+    name: str = Field(min_length=2, max_length=120)
     email: EmailStr
-    password: str
-    role: UserRole = UserRole.employee
+    password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
+
+    @model_validator(mode="after")
+    def reject_personal_password(self):
+        normalized_password = "".join(char for char in self.password.lower() if char.isalnum())
+        personal_tokens = [self.email.split("@", 1)[0], *self.name.split()]
+        for token in personal_tokens:
+            normalized_token = "".join(char for char in token.lower() if char.isalnum())
+            if len(normalized_token) >= 4 and normalized_token in normalized_password:
+                raise ValueError("Password must not contain your name or email")
+        return self
+
+
+class RegistrationAccepted(BaseModel):
+    message: str
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
+
+class ProfileUpdate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+    phone: Optional[str] = Field(default=None, max_length=30)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return " ".join(value.split())
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 # Employee schemas
 class EmployeeCreate(BaseModel):
@@ -138,6 +210,18 @@ class InventoryAdjust(BaseModel):
     quantity_change: int  # Positive to add, negative to subtract
 
 # Website product catalog schemas
+class ProductCategoryCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+
+class ProductCategoryOut(BaseModel):
+    id: int
+    slug: str
+    name: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class CatalogProductCreate(BaseModel):
     slug: Optional[str] = None
     sku: str = Field(min_length=1, max_length=100)
@@ -188,6 +272,26 @@ class CatalogProductOut(BaseModel):
     specs: List[str]
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CatalogPublicProductOut(BaseModel):
+    """Presentation-only product data safe for anonymous catalog consumers."""
+
+    slug: str
+    title: str
+    brand: str
+    category: str
+    image_url: Optional[str]
+    previous_price: Optional[float]
+    price: float
+    in_stock: bool
+    featured: bool
+    short_description: str
+    description: str
+    specs: List[str]
 
     class Config:
         from_attributes = True
@@ -277,9 +381,13 @@ class LeaveBalanceOut(BaseModel):
 class CombinedUserCreate(BaseModel):
     name: str
     email: EmailStr
-    password: str
+    password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
     role: UserRole
-    employee_id: str
     first_name: str
     last_name: str
     phone: Optional[str] = None
@@ -288,12 +396,32 @@ class CombinedUserCreate(BaseModel):
     salary: Optional[float] = None
     hire_date: datetime
 
+    @field_validator("role")
+    @classmethod
+    def validate_supported_role(cls, value: UserRole) -> UserRole:
+        if value not in {UserRole.superadmin, UserRole.hr, UserRole.employee}:
+            raise ValueError("Role must be one of: superadmin, hr, employee")
+        return value
+
+    @field_validator("phone")
+    @classmethod
+    def validate_bhutan_phone(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        digits = "".join(char for char in value if char.isdigit())
+        if digits.startswith("975"):
+            digits = digits[3:]
+        if len(digits) != 8 or not digits.startswith(("17", "77")):
+            raise ValueError("Enter a valid Bhutan mobile number starting with 17 or 77")
+        return f"+975{digits}"
+
 class CombinedUserOut(BaseModel):
     id: int
     name: str
     email: str
     role: str
     is_active: bool
+    module_permissions: List[str] = Field(default_factory=list)
     employee_id: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
@@ -301,3 +429,15 @@ class CombinedUserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ModulePermissionsUpdate(BaseModel):
+    permissions: List[str] = Field(default_factory=list)
+
+    @field_validator("permissions")
+    @classmethod
+    def validate_permissions(cls, values: List[str]) -> List[str]:
+        allowed = {"products", "inventory", "reports", "employees"}
+        invalid = set(values) - allowed
+        if invalid:
+            raise ValueError(f"Unsupported module permissions: {', '.join(sorted(invalid))}")
+        return sorted(set(values))

@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 import PrivateRoute from './utils/PrivateRoute'
 import ScrollProgress from './components/common/ScrollProgress'
 import BackToTop from './components/common/BackToTop'
 import SmoothScroll from './components/common/SmoothScroll'
+import { SystemFeedbackProvider } from './components/common/SystemFeedback/SystemFeedback'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./views/home/Index'))
@@ -27,6 +28,7 @@ import {
   LuShieldCheck, 
   LuSettings, 
   LuHistory 
+  ,LuFileText
 } from 'react-icons/lu';
 import { FiBarChart2 } from 'react-icons/fi';
 
@@ -43,9 +45,19 @@ const LoadingFallback = () => (
   </div>
 )
 
+const publicRegistrationEnabled =
+  String(import.meta.env.VITE_ALLOW_PUBLIC_REGISTRATION).toLowerCase() === 'true'
+
+const RegistrationRoute = () => (
+  publicRegistrationEnabled
+    ? <SignUp />
+    : <Navigate to="/login" replace state={{ message: 'Public registration is currently closed. Contact an administrator for access.' }} />
+)
+
 const App = () => {
   return (
-    <SmoothScroll>
+    <SystemFeedbackProvider>
+      <SmoothScroll>
       <BrowserRouter>
         <ScrollProgress />
         <Suspense fallback={<LoadingFallback />}>
@@ -55,12 +67,11 @@ const App = () => {
           <Route path='/products/:category' element={<ProductPage />} />
           <Route path='/product/:slug' element={<ProductDetailPage />} />
           <Route path='/login' element={<Login />} />
-          <Route path='/signup' element={<SignUp />} />
-          <Route path='/register' element={<SignUp />} />
+          <Route path='/signup' element={<RegistrationRoute />} />
+          <Route path='/register' element={<RegistrationRoute />} />
           <Route path='/portal' element={<Portal />} />
           <Route path='/dashboard' element={<PrivateRoute />}>
             <Route path='superadmin' element={<AdminDashboard />} />
-            <Route path='admin' element={<AdminDashboard />} />
             <Route path='hr' element={<HRDashboard />} />
             <Route path='employee' element={<EmployeeDashboard />} />
             
@@ -74,6 +85,7 @@ const App = () => {
             <Route path='inventory' element={<ModulePage title="Inventory Management" icon={LuPackage} />} />
             <Route path='products' element={<ModulePage title="Product Management" icon={LuShoppingBag} />} />
             <Route path='reports' element={<ModulePage title="System Reports" icon={FiBarChart2} />} />
+            <Route path='documents' element={<ModulePage title="Business Documents" icon={LuFileText} />} />
             <Route path='admin-panel' element={<ModulePage title="Admin Control Panel" icon={LuShieldCheck} />} />
             <Route path='audit' element={<ModulePage title="System Audit Logs" icon={LuHistory} />} />
             <Route path='settings' element={<ModulePage title="System Settings" icon={LuSettings} />} />
@@ -83,7 +95,8 @@ const App = () => {
       </Suspense>
         <BackToTop />
       </BrowserRouter>
-    </SmoothScroll>
+      </SmoothScroll>
+    </SystemFeedbackProvider>
   )
 }
 

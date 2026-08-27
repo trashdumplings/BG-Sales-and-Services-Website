@@ -83,9 +83,9 @@ def list_leave_requests(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List leave requests. Employees see their own; admins/HR see all."""
+    """List leave requests. Employees see their own; SuperAdmin/HR see all."""
     query = db.query(LeaveRequest)
-    if current_user.role not in [UserRole.admin, UserRole.superadmin, UserRole.hr]:
+    if current_user.role not in [UserRole.superadmin, UserRole.hr]:
         employee = _get_employee_for_user(db, current_user)
         query = query.filter(LeaveRequest.employee_id == employee.id)
     leaves = query.order_by(LeaveRequest.created_at.desc()).all()
@@ -99,8 +99,8 @@ def approve_leave(
     current_user: User = Depends(get_current_user),
 ):
     """Approve a leave request and notify the employee via email."""
-    if current_user.role not in [UserRole.admin, UserRole.superadmin, UserRole.hr]:
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can approve leaves")
+    if current_user.role not in [UserRole.superadmin, UserRole.hr]:
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can approve leaves")
 
     leave = db.get(LeaveRequest, leave_id)
     if not leave:
@@ -137,8 +137,8 @@ def reject_leave(
     current_user: User = Depends(get_current_user),
 ):
     """Reject a leave request and notify the employee via email."""
-    if current_user.role not in [UserRole.admin, UserRole.superadmin, UserRole.hr]:
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can reject leaves")
+    if current_user.role not in [UserRole.superadmin, UserRole.hr]:
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can reject leaves")
 
     leave = db.get(LeaveRequest, leave_id)
     if not leave:

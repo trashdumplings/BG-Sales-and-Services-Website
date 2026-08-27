@@ -37,11 +37,11 @@ const LeaveCalendar = ({ leaves }) => {
   for (let d = 1; d <= days; d++) {
     const dayLeaves = getLeavesForDay(d);
     calendarDays.push(
-      <div key={d} className={`calendar-day ${dayLeaves.length > 0 ? 'has-leave' : ''}`}>
+      <div key={d} className={`calendar-day ${dayLeaves.length > 0 ? 'has-leave' : ''}`} aria-label={`${monthNames[month]} ${d}, ${year}${dayLeaves.length ? `, ${dayLeaves.length} leave request${dayLeaves.length === 1 ? '' : 's'}` : ''}`}>
         <span className="day-num">{d}</span>
         <div className="day-leaves">
           {dayLeaves.map((l, idx) => (
-             <div key={idx} className={`leave-dot ${l.status}`} title={`${l.leave_type}: ${l.status}`}></div>
+             <div key={idx} className={`leave-dot ${l.status}`} title={`${l.leave_type}: ${l.status}`} aria-label={`${l.leave_type} leave: ${l.status}`}></div>
           ))}
         </div>
       </div>
@@ -53,8 +53,8 @@ const LeaveCalendar = ({ leaves }) => {
       <div className="calendar-header">
         <h2>{monthNames[month]} {year}</h2>
         <div className="calendar-nav">
-          <button onClick={prevMonth}><LuChevronLeft /></button>
-          <button onClick={nextMonth}><LuChevronRight /></button>
+          <button type="button" onClick={prevMonth} aria-label="Previous month" title="Previous month"><LuChevronLeft aria-hidden="true" /></button>
+          <button type="button" onClick={nextMonth} aria-label="Next month" title="Next month"><LuChevronRight aria-hidden="true" /></button>
         </div>
       </div>
       <div className="calendar-weekdays">

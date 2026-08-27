@@ -1,10 +1,11 @@
 from datetime import date, datetime, timedelta, timezone
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Dict, Any
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..db import get_db
-from ..models import User, Employee, Attendance, LeaveRequest, WorkLog, InventoryItem, UserRole
+from ..models import User, Employee, Attendance, LeaveRequest, WorkLog
+from ..schemas import ProfileUpdate
 from ..utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/profile", tags=["Profile & Dashboard"])
@@ -12,11 +13,26 @@ router = APIRouter(prefix="/api/profile", tags=["Profile & Dashboard"])
 @router.get("/me", response_model=Dict[str, Any])
 def get_my_profile(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Get the current user's employee profile and dashboard stats."""
-    print(f"DEBUG: Fetching profile for user: {current_user.email}")
     employee = db.query(Employee).filter(Employee.email == current_user.email.lower()).first()
     if not employee:
-        print(f"DEBUG: Employee profile not found for: {current_user.email}")
-        raise HTTPException(status_code=404, detail="Employee profile not found")
+        return {
+            "account": {
+                "id": current_user.id,
+                "name": current_user.name,
+                "email": current_user.email,
+                "role": current_user.role,
+                "is_active": current_user.is_active,
+                "created_at": current_user.created_at,
+                "last_login": current_user.last_login,
+            },
+            "employee": None,
+            "stats": {
+                "hours_this_month": 0,
+                "leave_balance": 0,
+                "attendance_rate": 0,
+            },
+            "recent_attendance": [],
+        }
     
     # 1. Total Work Hours (This month)
     today = date.today()
@@ -36,12 +52,15 @@ def get_my_profile(db: Session = Depends(get_db), current_user: User = Depends(g
     ).scalar() or 0
     leave_remaining = max(0, annual_leave_entitlement - used_leave)
     
-    # 3. Recent Attendance (Last 7 days)
+    # 3. Attendance rate (last 7 days) and latest stored attendance records.
     last_week = today - timedelta(days=7)
-    recent_attendance = db.query(Attendance).filter(
+    attendance_last_week = db.query(Attendance).filter(
         Attendance.employee_id == employee.id,
         Attendance.date >= last_week
-    ).order_by(Attendance.date.desc()).all()
+    ).all()
+    recent_attendance = db.query(Attendance).filter(
+        Attendance.employee_id == employee.id
+    ).order_by(Attendance.date.desc()).limit(7).all()
     
     # 4. Assigned Items (Inventory)
     # We might need a relationship in models, but for now we'll assume a 'assigned_to_id' field might be added
@@ -49,11 +68,21 @@ def get_my_profile(db: Session = Depends(get_db), current_user: User = Depends(g
     # Since we don't have a direct 'assigned_to' in InventoryItem yet, let's skip for now or use a placeholder
     
     return {
+        "account": {
+            "id": current_user.id,
+            "name": current_user.name,
+            "email": current_user.email,
+            "role": current_user.role,
+            "is_active": current_user.is_active,
+            "created_at": current_user.created_at,
+            "last_login": current_user.last_login,
+        },
         "employee": {
             "id": employee.id,
             "employee_id": employee.employee_id,
             "name": f"{employee.first_name} {employee.last_name}",
             "email": employee.email,
+            "phone": employee.phone,
             "department": employee.department,
             "position": employee.position,
             "status": employee.status,
@@ -62,12 +91,37 @@ def get_my_profile(db: Session = Depends(get_db), current_user: User = Depends(g
         "stats": {
             "hours_this_month": monthly_hours,
             "leave_balance": leave_remaining,
-            "attendance_rate": len(recent_attendance) / 7.0 if len(recent_attendance) > 0 else 0
+            "attendance_rate": len(attendance_last_week) / 7.0 if attendance_last_week else 0
         },
         "recent_attendance": [
             {"date": att.date, "check_in": att.check_in, "check_out": att.check_out, "status": att.status}
             for att in recent_attendance
         ]
+    }
+
+@router.patch("/me", response_model=Dict[str, Any])
+def update_my_profile(
+    payload: ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update the current user's safe, self-service profile fields."""
+    current_user.name = payload.name
+    employee = db.query(Employee).filter(Employee.email == current_user.email.lower()).first()
+
+    if employee:
+        name_parts = payload.name.split(" ", 1)
+        employee.first_name = name_parts[0]
+        employee.last_name = name_parts[1] if len(name_parts) > 1 else ""
+        employee.phone = payload.phone
+
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "name": current_user.name,
+        "email": current_user.email,
+        "phone": employee.phone if employee else None,
+        "employee_linked": employee is not None,
     }
 
 @router.post("/attendance/check-in", status_code=201)

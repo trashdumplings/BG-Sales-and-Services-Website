@@ -60,7 +60,7 @@ def get_employee_for_user(db: Session, current_user: User) -> Employee:
 
 
 def is_management_user(current_user: User) -> bool:
-    return current_user.role in [UserRole.admin, UserRole.superadmin, UserRole.hr]
+    return current_user.role in [UserRole.superadmin, UserRole.hr]
 
 
 def get_work_log_or_404(db: Session, log_id: int) -> WorkLog:
@@ -109,7 +109,7 @@ def list_work_logs_service(
 
 def list_review_queue_service(db: Session, current_user: User):
     if not is_management_user(current_user):
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can review work logs")
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can review work logs")
     work_logs = (
         db.query(WorkLog)
         .filter(WorkLog.workflow_status == WORKFLOW_SUBMITTED)
@@ -168,7 +168,7 @@ def update_work_log_service(db: Session, log_id: int, payload: WorkLogUpdate, cu
         raise HTTPException(status_code=400, detail="Only draft or rejected work logs can be edited")
 
     if is_management_user(current_user):
-        raise HTTPException(status_code=403, detail="HR/Admin cannot edit employee work log contents")
+        raise HTTPException(status_code=403, detail="HR and SuperAdmin cannot edit employee work log contents")
 
     updates = payload.model_dump(exclude_unset=True)
     for field, value in updates.items():
@@ -233,7 +233,7 @@ def resubmit_work_log_service(db: Session, log_id: int, current_user: User):
 def approve_work_log_service(db: Session, log_id: int, payload: WorkLogReviewAction, current_user: User):
     work_log = get_work_log_or_404(db, log_id)
     if not is_management_user(current_user):
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can review work logs")
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can review work logs")
     if work_log.workflow_status != WORKFLOW_SUBMITTED:
         raise HTTPException(status_code=400, detail="Only submitted work logs can be approved")
 
@@ -260,7 +260,7 @@ def approve_work_log_service(db: Session, log_id: int, payload: WorkLogReviewAct
 def reject_work_log_service(db: Session, log_id: int, payload: WorkLogReviewAction, current_user: User):
     work_log = get_work_log_or_404(db, log_id)
     if not is_management_user(current_user):
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can review work logs")
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can review work logs")
     if work_log.workflow_status != WORKFLOW_SUBMITTED:
         raise HTTPException(status_code=400, detail="Only submitted work logs can be rejected")
 

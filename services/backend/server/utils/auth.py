@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from passlib.context import CryptContext
 import bcrypt
 import hashlib
@@ -52,6 +53,15 @@ def get_password_hash(password: str) -> str:
             hashed = bcrypt.hashpw(pwd_bytes, salt)
             return hashed.decode('utf-8')
         raise
+
+def users_with_default_passwords(users) -> list[str]:
+    known_defaults = ("superadmin123", "hr123", "emp123", "admin123")
+    return [
+        user.email
+        for user in users
+        if user.is_active
+        and any(verify_password(password, user.password_hash) for password in known_defaults)
+    ]
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -138,7 +148,7 @@ def revoke_session(db: Session, session: UserSession, reason: str) -> None:
 def decode_refresh_token(refresh_token: str) -> dict:
     try:
         payload = jwt.decode(refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -157,7 +167,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         if user_id is None or session_id is None or payload.get("type") != "access":
             raise credentials_exception
         user_id_int = int(user_id)
-    except (JWTError, ValueError, TypeError):
+    except (PyJWTError, ValueError, TypeError):
         raise credentials_exception
 
     user = db.get(User, user_id_int)
@@ -179,14 +189,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 def is_admin_or_superadmin(user: User) -> bool:
-    return user.role in [UserRole.admin, UserRole.superadmin]
+    return user.role == UserRole.superadmin
 
 def is_superadmin(user: User) -> bool:
     return user.role == UserRole.superadmin
 
 def require_admin_or_superadmin(current_user: User = Depends(get_current_user)):
     if not is_admin_or_superadmin(current_user):
-        raise HTTPException(status_code=403, detail="Only Admin and SuperAdmin can perform this action")
+        raise HTTPException(status_code=403, detail="Only SuperAdmin can perform this action")
     return current_user
 
 def require_superadmin(current_user: User = Depends(get_current_user)):
@@ -195,9 +205,23 @@ def require_superadmin(current_user: User = Depends(get_current_user)):
     return current_user
 
 def require_hr_or_admin(current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.superadmin, UserRole.admin, UserRole.hr]:
-        raise HTTPException(status_code=403, detail="Only Admin, SuperAdmin and HR can perform this action")
+    if current_user.role not in [UserRole.superadmin, UserRole.hr]:
+        raise HTTPException(status_code=403, detail="Only SuperAdmin and HR can perform this action")
     return current_user
+
+def has_module_permission(user: User, permission: str) -> bool:
+    if user.role in [UserRole.superadmin, UserRole.admin]:
+        return True
+    if permission in {"reports", "employees"} and user.role == UserRole.hr:
+        return True
+    return permission in (user.module_permissions or [])
+
+def require_module_permission(permission: str):
+    def dependency(current_user: User = Depends(get_current_user)):
+        if not has_module_permission(current_user, permission):
+            raise HTTPException(status_code=403, detail=f"You do not have access to the {permission} module")
+        return current_user
+    return dependency
 
 def set_refresh_cookie(response: Response, token: str, max_age: Optional[int] = None):
     response.set_cookie(

@@ -1,20 +1,60 @@
 import './About.css'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import { animate } from 'animejs'
 import {
   motion,
   useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
-} from 'framer-motion'
+} from 'motion/react'
 import { FiArrowUpRight } from 'react-icons/fi'
 import aboutImage from '../../../assets/landing-bhutan/about-operations-bhutan.jpg'
 
 const stats = [
-  { value: '2008', label: 'Established in Bhutan' },
-  { value: '18+', label: 'Years of practical delivery' },
-  { value: '29', label: 'Technology partners' },
+  { value: 2008, start: 2000, suffix: '', label: 'Established in Bhutan' },
+  { value: 18, start: 0, suffix: '+', label: 'Years of practical delivery' },
+  { value: 29, start: 0, suffix: '', label: 'Technology partners' },
 ]
+
+const AnimatedStat = ({ value, start, suffix, reduceMotion }) => {
+  const valueRef = useRef(null)
+  const animationRef = useRef(null)
+
+  useEffect(() => {
+    const element = valueRef.current
+    if (!element || reduceMotion) return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+
+        const counter = { value: start }
+        animationRef.current = animate(counter, {
+          value,
+          duration: 1200,
+          ease: 'outExpo',
+          onUpdate: () => {
+            element.textContent = `${Math.round(counter.value)}${suffix}`
+          },
+        })
+
+        observer.disconnect()
+      },
+      { threshold: 0.65 },
+    )
+
+    observer.observe(element)
+
+    return () => {
+      observer.disconnect()
+      animationRef.current?.revert()
+      animationRef.current = null
+    }
+  }, [reduceMotion, start, suffix, value])
+
+  return <strong ref={valueRef}>{value}{suffix}</strong>
+}
 
 const About = () => {
   const sectionRef = useRef(null)
@@ -131,7 +171,7 @@ const About = () => {
                   visible: { opacity: 1, x: 0 },
                 }}
               >
-                <strong>{stat.value}</strong>
+                <AnimatedStat {...stat} reduceMotion={reduceMotion} />
                 <span>{stat.label}</span>
               </motion.div>
             ))}

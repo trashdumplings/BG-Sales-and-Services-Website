@@ -1,0 +1,369 @@
+/* Final responsive safety layer shared by public, auth, catalog, and portal routes. */
+html {
+  min-width: 320px;
+  overflow-x: clip;
+}
+
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+:is(main, section, article, aside, header, footer, nav, form, div) {
+  min-width: 0;
+}
+
+:is(input, select, textarea, button) {
+  max-width: 100%;
+}
+
+.modal-overlay,
+.modal-backdrop,
+.system-dialog-backdrop {
+  padding:
+    max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+.modal-content,
+.leave-modal-content,
+.product-form-modal,
+.system-dialog {
+  max-width: min(100%, 1120px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+:is(
+  .dashboard-table-wrap,
+  .ndis-table-wrap,
+  .inventory-table-wrapper,
+  .product-manager__table-wrap,
+  .leave-table-section,
+  .reports-panel--table
+) {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1180px) {
+  .product-store-header {
+    gap: 20px;
+    padding-inline: 20px;
+  }
+
+  .product-store-header__links {
+    gap: 18px;
+  }
+
+  .product-store-search {
+    width: min(240px, 24vw);
+  }
+
+  .home-work,
+  .home-contact,
+  .home-about,
+  .home-products,
+  .home-services {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .container,
+  .container-nav {
+    width: min(100% - 32px, 1280px);
+  }
+
+  .product-store-header__links {
+    display: none;
+  }
+
+  .product-store-header {
+    grid-template-columns: auto 1fr;
+  }
+
+  .product-store-header__actions {
+    justify-self: end;
+  }
+
+  .dash-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 820px) {
+  :root {
+    --responsive-gutter: 16px;
+  }
+
+  .navbar {
+    max-width: calc(100% - 20px);
+  }
+
+  .navbar-container {
+    width: 100%;
+  }
+
+  .products-page .products-logo-section {
+    max-width: calc(100% - 20px);
+  }
+
+  .product-store-announcement {
+    padding-inline:
+      max(var(--responsive-gutter), env(safe-area-inset-left))
+      max(var(--responsive-gutter), env(safe-area-inset-right));
+  }
+
+  .product-store-header {
+    min-height: 68px;
+    padding-inline: var(--responsive-gutter);
+  }
+
+  .product-store-search {
+    width: min(260px, 38vw);
+  }
+
+  .dash-header {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .dash-aside {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .dash-content {
+    padding:
+      18px
+      max(16px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modal-content,
+  .leave-modal-content {
+    width: min(100%, 680px);
+  }
+
+  .footer-container,
+  .footer-bottom-content {
+    width: min(100% - 32px, 1200px);
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --responsive-gutter: 14px;
+  }
+
+  body {
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    min-height: 46px;
+    font-size: 16px !important;
+  }
+
+  :is(
+    button,
+    [role='button'],
+    .navbar-menu a,
+    .products-mini-nav a,
+    .product-store-header a,
+    .dash-profile-dropdown button
+  ) {
+    min-height: 44px;
+  }
+
+  .container,
+  .container-nav {
+    width: calc(100% - 28px);
+  }
+
+  .navbar-logo-img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .product-store-header {
+    gap: 10px;
+  }
+
+  .product-store-header__brand span {
+    display: none;
+  }
+
+  .product-store-header__brand img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .product-store-search {
+    width: min(190px, 49vw);
+  }
+
+  .product-store-contact {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .product-store-contact span {
+    display: none;
+  }
+
+  .login-wrap,
+  .signup-wrap {
+    align-items: flex-start;
+    min-height: 100dvh;
+    padding:
+      max(18px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
+  }
+
+  .login-card,
+  .signup-card {
+    width: 100%;
+    margin-block: auto;
+    padding: 28px 20px;
+  }
+
+  .modal-overlay,
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-content,
+  .leave-modal-content {
+    width: 100%;
+    max-width: none;
+    max-height: min(92dvh, 900px);
+    border-radius: 18px 18px 0 0 !important;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  .product-form-modal {
+    width: 100%;
+    max-width: none;
+  }
+
+  :is(.form-actions, .modal-actions) {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  :is(.form-actions, .modal-actions) > :is(button, a) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dash-content {
+    padding:
+      14px
+      max(12px, env(safe-area-inset-right))
+      max(22px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+
+  .dash-profile-dropdown {
+    position: fixed;
+    top: 70px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .system-toast-region {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    left: max(12px, env(safe-area-inset-left));
+    width: auto;
+  }
+
+  .footer-container,
+  .footer-bottom-content {
+    width: calc(100% - 28px);
+  }
+}
+
+@media (max-width: 420px) {
+  .dash-header__title h1 {
+    max-width: 32vw;
+  }
+
+  .product-store-search {
+    width: min(168px, 46vw);
+  }
+
+  .product-store-search input {
+    padding-inline: 10px 4px;
+  }
+
+  .products-page .products-mini-nav .products-nav-quote {
+    padding-inline: 12px;
+  }
+
+  .profile-hero,
+  .profile-card,
+  .user-table-card,
+  .reports-panel,
+  .settings-section {
+    border-radius: 12px !important;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .login-wrap,
+  .signup-wrap {
+    align-items: flex-start;
+  }
+
+  .navbar-menu {
+    max-height: calc(100dvh - 88px);
+  }
+
+  .modal-content,
+  .leave-modal-content,
+  .product-form-modal,
+  .system-dialog {
+    max-height: calc(100dvh - 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

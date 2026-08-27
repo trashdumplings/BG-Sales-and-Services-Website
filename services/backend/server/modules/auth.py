@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from ..db import get_db
 from ..models import User, UserRole, UserSession
-from ..schemas import TokenResponse, UserOut, RegisterIn, SessionOut, ChallengeOut
+from ..schemas import TokenResponse, UserOut, RegisterIn, RegistrationAccepted, SessionOut, ChallengeOut, PasswordChange
 from ..utils.auth import (
     authenticate_user, 
     create_access_token, 
@@ -15,6 +15,7 @@ from ..utils.auth import (
     create_session_tokens,
     decode_refresh_token,
     get_password_hash, 
+    verify_password,
     set_refresh_cookie, 
     clear_refresh_cookie,
     get_current_user,
@@ -31,50 +32,59 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 FAILED_LOGIN_WINDOW_MINUTES = 15
 FAILED_LOGIN_LIMIT = 5
+SOURCE_FAILED_LOGIN_LIMIT = 20
 CAPTCHA_TRIGGER_ATTEMPTS = 3
 CHALLENGE_TTL_SECONDS = 300
 failed_login_attempts = {}
+source_failed_login_attempts = {}
 login_challenges = {}
 
-def login_attempt_key(request: Request, username: str) -> str:
-    ip = request.client.host if request.client else "unknown"
-    return f"{ip}:{username.lower()}"
+REGISTRATION_ACCEPTED_MESSAGE = (
+    "If registration can be completed, the account request has been accepted."
+)
 
-def enforce_login_throttle(request: Request, username: str, challenge_verified: bool = False) -> None:
-    key = login_attempt_key(request, username)
+def request_source(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+def login_attempt_key(request: Request, username: str) -> str:
+    return f"{request_source(request)}:{username.lower()}"
+
+def recent_attempts(store: dict, key: str) -> list:
     now = utc_now()
     attempts = [
         attempt
-        for attempt in failed_login_attempts.get(key, [])
+        for attempt in store.get(key, [])
         if attempt > now - timedelta(minutes=FAILED_LOGIN_WINDOW_MINUTES)
     ]
-    failed_login_attempts[key] = attempts
-    if len(attempts) >= FAILED_LOGIN_LIMIT and not challenge_verified:
+    store[key] = attempts
+    return attempts
+
+def enforce_login_throttle(request: Request, username: str) -> None:
+    key = login_attempt_key(request, username)
+    attempts = recent_attempts(failed_login_attempts, key)
+    source_attempts = recent_attempts(source_failed_login_attempts, request_source(request))
+    if len(attempts) >= FAILED_LOGIN_LIMIT or len(source_attempts) >= SOURCE_FAILED_LOGIN_LIMIT:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={
                 "message": "Too many failed login attempts. Try again later.",
                 "captcha_required": True,
             },
+            headers={"Retry-After": str(FAILED_LOGIN_WINDOW_MINUTES * 60)},
         )
 
 def record_failed_login(request: Request, username: str) -> None:
     key = login_attempt_key(request, username)
-    failed_login_attempts.setdefault(key, []).append(utc_now())
+    now = utc_now()
+    failed_login_attempts.setdefault(key, []).append(now)
+    source_failed_login_attempts.setdefault(request_source(request), []).append(now)
 
 def clear_failed_logins(request: Request, username: str) -> None:
     failed_login_attempts.pop(login_attempt_key(request, username), None)
 
 def current_failed_login_count(request: Request, username: str) -> int:
     key = login_attempt_key(request, username)
-    now = utc_now()
-    attempts = [
-        attempt
-        for attempt in failed_login_attempts.get(key, [])
-        if attempt > now - timedelta(minutes=FAILED_LOGIN_WINDOW_MINUTES)
-    ]
-    failed_login_attempts[key] = attempts
-    return len(attempts)
+    return len(recent_attempts(failed_login_attempts, key))
 
 def create_login_challenge(request: Request, username: str) -> dict:
     left = randint(2, 9)
@@ -116,18 +126,30 @@ def issue_challenge(
     request: Request,
     username: str = Form(...),
 ):
+    if len(recent_attempts(source_failed_login_attempts, request_source(request))) >= SOURCE_FAILED_LOGIN_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many authentication attempts. Try again later.",
+            headers={"Retry-After": str(FAILED_LOGIN_WINDOW_MINUTES * 60)},
+        )
     if current_failed_login_count(request, username) < CAPTCHA_TRIGGER_ATTEMPTS:
         raise HTTPException(status_code=400, detail="Challenge is not required for this login.")
     return create_login_challenge(request, username)
 
-@router.post("/register", response_model=UserOut, status_code=201)
+@router.post("/register", response_model=RegistrationAccepted, status_code=202)
 def register(payload: RegisterIn, db: Session = Depends(get_db)):
     if not settings.ALLOW_PUBLIC_REGISTRATION:
         raise HTTPException(status_code=403, detail="Public registration is disabled.")
+    # Hash before checking existence to reduce the timing difference between new and
+    # existing addresses. The response remains identical in either case.
+    password_hash = get_password_hash(payload.password)
+    existing_user = db.query(User.id).filter(User.email == payload.email.lower()).first()
+    if existing_user:
+        return RegistrationAccepted(message=REGISTRATION_ACCEPTED_MESSAGE)
     user = User(
         name=payload.name,
         email=payload.email.lower(),
-        password_hash=get_password_hash(payload.password),
+        password_hash=password_hash,
         role=UserRole.employee,
     )
     db.add(user)
@@ -135,9 +157,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Email already registered")
-    db.refresh(user)
-    return user
+    return RegistrationAccepted(message=REGISTRATION_ACCEPTED_MESSAGE)
 
 @router.post("/login", response_model=TokenResponse)
 def login(
@@ -149,8 +169,8 @@ def login(
     challenge_answer: str | None = Form(None),
     db: Session = Depends(get_db),
 ):
-    challenge_verified = verify_login_challenge(request, form_data.username, challenge_id, challenge_answer)
-    enforce_login_throttle(request, form_data.username, challenge_verified)
+    verify_login_challenge(request, form_data.username, challenge_id, challenge_answer)
+    enforce_login_throttle(request, form_data.username)
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         record_failed_login(request, form_data.username)
@@ -167,7 +187,7 @@ def login(
 
     return TokenResponse(
         access_token=access_token,
-        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role},
+        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role, "module_permissions": user.module_permissions or []},
     )
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -230,7 +250,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
 
     return TokenResponse(
         access_token=access_token,
-        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role},
+        user={"id": user.id, "name": user.name, "email": user.email, "role": user.role, "module_permissions": user.module_permissions or []},
     )
 
 @router.post("/logout", status_code=204)
@@ -252,6 +272,26 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserOut)
 def read_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.post("/change-password", status_code=204)
+def change_password(
+    payload: PasswordChange,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if verify_password(payload.new_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="New password must be different")
+    current_user.password_hash = get_password_hash(payload.new_password)
+    sessions = db.query(UserSession).filter(
+        UserSession.user_id == current_user.id,
+        UserSession.revoked_at.is_(None),
+    ).all()
+    for session in sessions:
+        revoke_session(db, session, "password_changed")
+    db.commit()
+    return None
 
 @router.get("/sessions", response_model=list[SessionOut])
 def list_sessions(

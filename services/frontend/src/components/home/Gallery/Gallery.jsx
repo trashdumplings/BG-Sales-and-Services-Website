@@ -1,10 +1,10 @@
 import './Gallery.css'
 import { useMemo, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { FiArrowDown, FiArrowUpRight } from 'react-icons/fi'
 import { projectsData } from '../../../stores/Data'
 import worldBankImage from '../../../assets/landing-bhutan/project-world-bank.jpg'
-import rmaImage from '../../../assets/landing-bhutan/project-rma.jpg'
+import bitdeerImage from '../../../assets/landing-bhutan/project-bitdeer-bhutan-hvac.jpg'
 import dgpcImage from '../../../assets/landing-bhutan/project-dgpc.jpg'
 import bnbImage from '../../../assets/landing-bhutan/project-bnb.jpg'
 import healthImage from '../../../assets/landing-bhutan/project-health.jpg'
@@ -17,9 +17,9 @@ const projectPresentation = {
     systems: ['ICT project management', 'Data centre & electrical works', '11 years of annual service support'],
   },
   5: {
-    image: rmaImage,
-    shortName: 'Royal Monetary Authority',
-    systems: ['Unified threat management', 'Secure fund-transfer infrastructure', 'SWIFT server deployment'],
+    image: bitdeerImage,
+    shortName: 'Bitdeer',
+    systems: ['Air-conditioning equipment supply', 'Professional on-site installation', 'Facility cooling delivery'],
   },
   3: {
     image: dgpcImage,

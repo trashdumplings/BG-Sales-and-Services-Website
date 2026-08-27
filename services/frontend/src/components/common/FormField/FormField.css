@@ -1,0 +1,70 @@
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-field__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--body-text);
+}
+
+.form-field__required {
+  color: var(--status-danger);
+}
+
+.form-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-field__control > input,
+.form-field__control > select,
+.form-field__control > textarea {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-bg);
+  color: var(--body-text);
+  font-size: var(--text-sm);
+  font-family: inherit;
+}
+
+.form-field__control > input:focus-visible,
+.form-field__control > select:focus-visible,
+.form-field__control > textarea:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 1px;
+}
+
+.form-field__spinner {
+  position: absolute;
+  right: var(--space-sm);
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--brand-blue);
+  border-radius: 50%;
+  animation: form-field-spin 0.6s linear infinite;
+}
+
+@keyframes form-field-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-field__error {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--status-danger);
+}
+
+.form-field__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}

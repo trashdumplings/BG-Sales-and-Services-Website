@@ -20,6 +20,10 @@ export const setFocusTrap = (containerElement, closeCallback) => {
   const lastElement = focusableElements[focusableElements.length - 1]
 
   const handleKeyPress = (e) => {
+    if (e.key === 'Escape' && closeCallback) {
+      closeCallback()
+      return
+    }
     if (e.key !== 'Tab') return
 
     if (e.shiftKey) {

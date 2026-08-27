@@ -6,7 +6,7 @@ import {
   useReducedMotion,
   useScroll,
   useTransform,
-} from 'framer-motion'
+} from 'motion/react'
 import { FiArrowUpRight } from 'react-icons/fi'
 import connectImage from '../../../assets/landing-bhutan/philosophy-connect-no-people.jpg'
 import protectImage from '../../../assets/landing-bhutan/philosophy-security-no-people.jpg'
@@ -23,7 +23,7 @@ const services = [
     services: ['LAN / WAN architecture', 'Data centres & NOC', 'Wireless & voice'],
     image: connectImage,
     imageAlt: 'Wireless telecommunications infrastructure overlooking Thimphu',
-    color: '#001845',
+    color: 'var(--brand-chapter-1)',
   },
   {
     number: '02',
@@ -35,7 +35,7 @@ const services = [
     services: ['IP surveillance', 'Access & threat control', 'Fire detection systems'],
     image: protectImage,
     imageAlt: 'Integrated security systems on a Bhutanese building',
-    color: '#023e7d',
+    color: 'var(--brand-chapter-2)',
   },
   {
     number: '03',
@@ -47,7 +47,7 @@ const services = [
     services: ['UPS & power continuity', 'HVAC & building systems', 'Managed maintenance'],
     image: sustainImage,
     imageAlt: 'Critical power and building systems in a Bhutanese facility',
-    color: '#0353a4',
+    color: 'var(--brand-chapter-3)',
   },
 ]
 

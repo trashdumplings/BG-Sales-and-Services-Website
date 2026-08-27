@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import User, Employee, UserRole
 from ..schemas import EmployeeCreate, EmployeeUpdate, EmployeeOut
-from ..utils.auth import get_current_user, require_admin_or_superadmin, require_hr_or_admin
+from ..utils.auth import get_current_user, require_admin_or_superadmin, require_hr_or_admin, require_module_permission
 
 router = APIRouter(prefix="/api/employees", tags=["Employees"])
 
@@ -43,7 +43,7 @@ def get_employees(
     department: Optional[str] = None,
     status: Optional[str] = None,
     db: Session = Depends(get_db), 
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_module_permission("employees"))
 ):
     """Get all employees with optional filtering. All authenticated users can view."""
     query = db.query(Employee)
@@ -55,7 +55,7 @@ def get_employees(
     return employees
 
 @router.get("/{employee_id}", response_model=EmployeeOut)
-def get_employee(employee_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_employee(employee_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_module_permission("employees"))):
     """Get a specific employee by ID."""
     employee = db.get(Employee, employee_id)
     if not employee:

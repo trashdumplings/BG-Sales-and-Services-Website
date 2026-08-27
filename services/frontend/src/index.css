@@ -5,30 +5,60 @@
 
 /* Light theme (default) - clean corporate system */
 :root {
-    --color-primary-dark: #0f2f44;
-    --color-primary-blue: #0f5f8f;
-    --color-accent: #14b8a6;
+    /* Brand tokens — the site's one accent system, formalized from the
+       navy/blue palette already proven out in the Hero. Every component
+       that needs brand chrome (backgrounds, buttons, links, borders)
+       should reference these instead of hardcoding hex. */
+    --brand-ink: #001233;
+    --brand-ink-2: #001845;
+    --brand-navy-mid: #002855;
+    --brand-blue: #0466c8;
+    --brand-blue-deep: #0353a4;
+    --brand-blue-pale: #87bfff;
+    --brand-blue-pale-2: #7cb8ef;
+    --brand-fog: #eef5fb;
+    --brand-slate: #5c677d;
+    --brand-slate-2: #7d8597;
+
+    /* Three-step accent progression for the SolutionsStory chapters —
+       distinct from the general brand tokens above; used only to tell
+       the three chapters apart, not as general chrome. */
+    --brand-chapter-1: #001845;
+    --brand-chapter-2: #023e7d;
+    --brand-chapter-3: #0353a4;
+
+    /* Status tokens — semantic UI state (success/warning/danger/info),
+       independent of the brand accent. Badges, pills, and table states
+       use these, never --brand-blue. */
+    --status-success: #16a34a;
+    --status-warning: #d97706;
+    --status-danger: #dc2626;
+    --status-info: #0ea5e9;
+
+    --color-primary-dark: var(--brand-ink);
+    --color-primary-blue: var(--brand-blue);
+    --color-accent: var(--brand-blue);
     --color-neutral-50: #f6f8fb;
     --color-neutral-100: #eef3f7;
     --color-neutral-200: #dbe5ee;
     --color-neutral-800: #1f2a37;
     --color-neutral-900: #101828;
     --color-white: #ffffff;
-    --color-gray-600: #526173;
-    --color-success: #159a6b;
-    --color-warning: #b7791f;
-    --color-danger: #c2413f;
-    
+    --color-gray-600: var(--brand-slate);
+    --color-success: var(--status-success);
+    --color-warning: var(--status-warning);
+    --color-danger: var(--status-danger);
+
     --body-bg: var(--color-neutral-50);
     --body-text: var(--color-neutral-900);
     --text-secondary: var(--color-gray-600);
     --surface-bg: var(--color-white);
     --surface-muted: #f8fafc;
     --border-color: #d9e2ec;
-    --focus-ring: rgba(20, 184, 166, 0.28);
+    --focus-ring: rgba(4, 102, 200, 0.28);
     --primary-color: var(--color-primary-blue);
     --accent-color: var(--color-primary-blue);
-    --accent-hover: #0b4f77;
+    --accent-hover: var(--brand-blue-deep);
     --bg-secondary: var(--surface-bg);
     --text-primary: var(--body-text);
     --text-color: var(--body-text);
@@ -89,16 +119,16 @@
 
 /* Dark theme */
 [data-theme="dark"] {
-    --color-primary-blue: #38bdf8;
-    --color-accent: #2dd4bf;
-    --body-bg: #0b1120;
-    --body-text: #eef5fb;
+    --color-primary-blue: var(--brand-blue-pale);
+    --color-accent: var(--brand-blue-pale);
+    --body-bg: var(--brand-ink);
+    --body-text: var(--brand-fog);
     --text-secondary: #a9b7c7;
-    --surface-bg: #111827;
+    --surface-bg: var(--brand-ink-2);
     --surface-muted: #172033;
     --border-color: rgba(148, 163, 184, 0.2);
-    --focus-ring: rgba(45, 212, 191, 0.32);
-    --accent-hover: #0ea5e9;
+    --focus-ring: rgba(135, 191, 255, 0.32);
+    --accent-hover: var(--brand-blue-deep);
 }
 
 
@@ -373,10 +403,42 @@ li {
     background: transparent;
     color: var(--color-primary-blue);
     border: 2px solid var(--color-primary-blue);
-    
+
     &:focus-visible:not(:disabled) {
         background: var(--color-primary-blue);
         color: var(--color-white);
+    }
+}
+
+.btn.danger {
+    background: var(--status-danger);
+    color: var(--color-white);
+    box-shadow: var(--shadow-md);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+}
+
+.btn.success {
+    background: var(--status-success);
+    color: var(--color-white);
+    box-shadow: var(--shadow-md);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
     }
 }
 

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getEmployees } from '../../../utils/api';
 import { useAuth } from '../../../stores/AuthProvider';
-import { LuSearch, LuFilter, LuPlus, LuUser, LuMail, LuPhone, LuBriefcase } from 'react-icons/lu';
+import { LuSearch, LuFilter, LuPlus, LuMail, LuPhone, LuBriefcase } from 'react-icons/lu';
+import { useSystemFeedback } from '../../common/SystemFeedback/SystemFeedback';
 import './EmployeeList.css';
 
 const EmployeeList = () => {
+  const { notify } = useSystemFeedback();
   const { token } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ const EmployeeList = () => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getEmployees(token);
@@ -38,13 +40,13 @@ const EmployeeList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchEmployees();
     }
-  }, [token]);
+  }, [fetchEmployees, token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -88,7 +90,7 @@ const EmployeeList = () => {
         status: 'active'
       });
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -115,8 +117,9 @@ const EmployeeList = () => {
       <div className="list-controls">
         <div className="search-box">
           <LuSearch className="search-icon" />
-          <input 
-            type="text" 
+          <input
+            aria-label="Search employees"
+            type="text"
             placeholder="Search employees..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -187,7 +190,7 @@ const EmployeeList = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h2>Add New Employee</h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+              <button type="button" className="close-btn" aria-label="Close employee form" onClick={() => setShowModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleAddSubmit} className="employee-form">
               <div className="form-row">

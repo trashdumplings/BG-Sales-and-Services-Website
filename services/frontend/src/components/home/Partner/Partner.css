@@ -37,17 +37,7 @@
 .partner-ribbon__track {
   width: max-content;
   display: flex;
-  animation: partner-scroll 54s linear infinite;
   will-change: transform;
-}
-
-.partner-ribbon.is-reverse .partner-ribbon__track {
-  animation-name: partner-scroll-reverse;
-  animation-duration: 60s;
-}
-
-.partner-ribbons:hover .partner-ribbon__track {
-  animation-play-state: paused;
 }
 
 .partner-logo {
@@ -74,16 +64,6 @@
   transform: scale(1.05);
 }
 
-@keyframes partner-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@keyframes partner-scroll-reverse {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
-}
-
 @media (max-width: 680px) {
   .partner-logo {
     width: 145px;
@@ -101,7 +81,7 @@
   }
 
   .partner-ribbon__track {
-    animation: none;
+    transform: none !important;
   }
 
   .partner-ribbon__track > .partner-logo:nth-child(n + 16) {

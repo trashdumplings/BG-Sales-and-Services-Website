@@ -17,6 +17,13 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # The project originally used SQLAlchemy create_all before adopting Alembic, so
+    # the first revision assumed every legacy table already existed. Bootstrap any
+    # missing tables first; create_all is check-first and preserves populated tables.
+    from server.db import Base
+    import server.models  # noqa: F401
+
+    Base.metadata.create_all(bind=op.get_bind())
     op.execute(
         sa.text(
             """

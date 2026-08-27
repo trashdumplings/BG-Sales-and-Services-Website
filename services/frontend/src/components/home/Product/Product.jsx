@@ -7,7 +7,7 @@ import {
   useScroll,
   useSpring,
   useTransform,
-} from 'framer-motion'
+} from 'motion/react'
 import { Link } from 'react-router-dom'
 import { FiArrowRight, FiArrowUpRight } from 'react-icons/fi'
 import laptop from '../../../assets/products/laptop/pavillion.png'
@@ -140,6 +140,17 @@ const Product = () => {
           Explore a focused selection of business technology, with sourcing,
           configuration, and support from one local team.
         </motion.p>
+        <motion.div
+          className="home-products__intro-cta"
+          variants={{
+            hidden: { opacity: 0, y: 14 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+          }}
+        >
+          <Link to="/product" className="home-products__catalog-link">
+            View the full catalog <FiArrowUpRight />
+          </Link>
+        </motion.div>
       </motion.div>
 
       <motion.div
@@ -266,10 +277,9 @@ const Product = () => {
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         <p>Need larger quantities, installation, or project-specific sourcing?</p>
-        <div>
-          <Link to="/product">View the full catalog <FiArrowUpRight /></Link>
-          <a href="mailto:bgsales@outlook.com">Request a quotation <FiArrowUpRight /></a>
-        </div>
+        <a href="mailto:bgsales@outlook.com" className="home-products__cta">
+          Request a quotation <FiArrowUpRight />
+        </a>
       </motion.div>
     </section>
   )

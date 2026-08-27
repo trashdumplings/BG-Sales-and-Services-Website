@@ -134,29 +134,3 @@ export const initCSP = () => {
   `.replace(/\s+/g, ' ')
   document.head.appendChild(meta)
 }
-
-// Secure storage wrapper
-export const secureStorage = {
-  set: (key, value) => {
-    try {
-      const encrypted = btoa(JSON.stringify(value)) // Basic encoding (use proper encryption in production)
-      localStorage.setItem(`secure_${key}`, encrypted)
-    } catch (e) {
-      console.error('Storage error:', e)
-    }
-  },
-
-  get: (key) => {
-    try {
-      const encrypted = localStorage.getItem(`secure_${key}`)
-      return encrypted ? JSON.parse(atob(encrypted)) : null
-    } catch (e) {
-      console.error('Storage error:', e)
-      return null
-    }
-  },
-
-  remove: (key) => {
-    localStorage.removeItem(`secure_${key}`)
-  }
-}

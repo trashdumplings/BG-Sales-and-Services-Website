@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { apiLogin, apiRefresh, apiMe, apiLogout, apiRegister } from '../utils/api';
+import { apiLogin, apiRefresh, apiLogout, apiRegister } from '../utils/api';
 
 const AuthContext = createContext(null);
 
@@ -51,8 +51,8 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const register = async (name, email, password, role = 'employee') => {
-    const user = await apiRegister(name, email, password, role);
+  const register = async (name, email, password) => {
+    await apiRegister(name, email, password);
     // After registration, automatically log in
     const data = await apiLogin(email, password);
     setToken(data.access_token);
@@ -70,6 +70,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }

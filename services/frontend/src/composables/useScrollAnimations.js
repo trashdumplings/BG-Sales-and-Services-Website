@@ -6,32 +6,31 @@ import { useEffect, useRef, useState } from 'react';
  */
 export const useScrollReveal = (options = {}) => {
   const ref = useRef(null);
-  const defaultOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -100px 0px',
-  };
+  const threshold = options.threshold ?? 0.1;
+  const rootMargin = options.rootMargin ?? '0px 0px -100px 0px';
 
   useEffect(() => {
+    const observedNode = ref.current;
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && ref.current) {
-          ref.current.style.opacity = '1';
-          ref.current.style.transform = 'translateY(0)';
-          ref.current.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        if (entry.isIntersecting && observedNode) {
+          observedNode.style.opacity = '1';
+          observedNode.style.transform = 'translateY(0)';
+          observedNode.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
         }
       });
-    }, { ...defaultOptions, ...options });
+    }, { threshold, rootMargin });
 
-    if (ref.current) {
-      ref.current.style.opacity = '0';
-      ref.current.style.transform = 'translateY(30px)';
-      observer.observe(ref.current);
+    if (observedNode) {
+      observedNode.style.opacity = '0';
+      observedNode.style.transform = 'translateY(30px)';
+      observer.observe(observedNode);
     }
 
     return () => {
-      if (ref.current) observer.unobserve(ref.current);
+      if (observedNode) observer.unobserve(observedNode);
     };
-  }, [options]);
+  }, [rootMargin, threshold]);
 
   return ref;
 };
@@ -75,6 +74,7 @@ export const useScrollCounter = (targetValue, duration = 2) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
+    const observedNode = ref.current;
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -94,12 +94,12 @@ export const useScrollCounter = (targetValue, duration = 2) => {
       });
     }, { threshold: 0.5 });
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    if (observedNode) {
+      observer.observe(observedNode);
     }
 
     return () => {
-      if (ref.current) observer.unobserve(ref.current);
+      if (observedNode) observer.unobserve(observedNode);
     };
   }, [targetValue, duration]);
 
