@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13.15-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -9,6 +9,13 @@ COPY services/backend/server/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY services/backend/server ./server
+
+RUN groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid app --no-create-home app \
+    && mkdir -p /app/uploads \
+    && chown -R app:app /app
+
+USER 10001:10001
 
 EXPOSE 8000
 

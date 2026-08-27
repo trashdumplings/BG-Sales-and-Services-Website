@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from .api import routers
 from .db import engine, Base, SessionLocal
 from .config import get_settings
@@ -105,6 +107,20 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok", "service": settings.APP_NAME}
+
+
+@app.get("/ready")
+def ready():
+    """Readiness probe: only advertise the API when its database is usable."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc
+    return {"status": "ready", "service": settings.APP_NAME}
 
 # Dashboard endpoint (example)
 @app.get("/dashboard")

@@ -14,7 +14,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("module_permissions", sa.JSON(), nullable=False, server_default="[]"))
+    columns = {column["name"] for column in sa.inspect(op.get_bind()).get_columns("users")}
+    if "module_permissions" not in columns:
+        op.add_column("users", sa.Column("module_permissions", sa.JSON(), nullable=False, server_default="[]"))
 
 
 def downgrade() -> None:

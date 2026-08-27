@@ -18,16 +18,21 @@ DEFAULT_CATEGORIES = (
 )
 
 def upgrade():
-    table = op.create_table(
-        "product_categories",
-        sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("slug", sa.String(100), nullable=False, unique=True),
-        sa.Column("name", sa.String(120), nullable=False, unique=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-    )
-    op.create_index("ix_product_categories_id", "product_categories", ["id"])
-    op.create_index("ix_product_categories_slug", "product_categories", ["slug"], unique=True)
-    op.bulk_insert(table, [{"slug": slug, "name": name} for slug, name in DEFAULT_CATEGORIES])
+    if not sa.inspect(op.get_bind()).has_table("product_categories"):
+        op.create_table(
+            "product_categories",
+            sa.Column("id", sa.Integer(), primary_key=True),
+            sa.Column("slug", sa.String(100), nullable=False, unique=True),
+            sa.Column("name", sa.String(120), nullable=False, unique=True),
+            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        )
+        op.create_index("ix_product_categories_id", "product_categories", ["id"])
+        op.create_index("ix_product_categories_slug", "product_categories", ["slug"], unique=True)
+    for slug, name in DEFAULT_CATEGORIES:
+        op.execute(
+            sa.text("INSERT INTO product_categories (slug, name) VALUES (:slug, :name) ON CONFLICT DO NOTHING")
+            .bindparams(slug=slug, name=name)
+        )
     op.execute(sa.text("""
         INSERT INTO product_categories (slug, name)
         SELECT DISTINCT category, initcap(replace(category, '-', ' '))

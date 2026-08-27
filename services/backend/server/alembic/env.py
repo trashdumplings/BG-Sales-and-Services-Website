@@ -26,7 +26,9 @@ if config.config_file_name is not None:
 database_url = os.getenv("DATABASE_URL") or DATABASE_URL
 if hasattr(database_url, "render_as_string"):
     database_url = database_url.render_as_string(hide_password=False)
-config.set_main_option("sqlalchemy.url", database_url)
+# ConfigParser reserves percent signs for interpolation; escaped URL credentials
+# legitimately contain them (for example %40 for @).
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 target_metadata = Base.metadata
 
 

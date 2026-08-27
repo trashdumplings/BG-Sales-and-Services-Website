@@ -10,6 +10,7 @@ __pycache__/
 .env
 .env.*
 secrets/
+backups/
 !.env.example
 !.env.docker.example
 !.env.production.example

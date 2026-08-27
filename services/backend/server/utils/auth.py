@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from passlib.context import CryptContext
 import bcrypt
 import hashlib
@@ -147,7 +148,7 @@ def revoke_session(db: Session, session: UserSession, reason: str) -> None:
 def decode_refresh_token(refresh_token: str) -> dict:
     try:
         payload = jwt.decode(refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -166,7 +167,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         if user_id is None or session_id is None or payload.get("type") != "access":
             raise credentials_exception
         user_id_int = int(user_id)
-    except (JWTError, ValueError, TypeError):
+    except (PyJWTError, ValueError, TypeError):
         raise credentials_exception
 
     user = db.get(User, user_id_int)
